@@ -1,0 +1,9 @@
+function setup(name)
+  local setting = string.format("config.%s", name)
+  return require(setting)
+end
+
+return {
+  -- support direnv utility
+  -- { "direnv/direnv.vim", config = setup("direnv") },
+}
