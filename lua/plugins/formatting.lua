@@ -25,21 +25,25 @@ return {
       require("conform").setup({
         formatters_by_ft = {
           lua = { "stylua" },
-          css = { "prettier" },
-          html = { "prettier" },
-          graphql = { "typos", "prettier" },
-          typescript = { "typos", "prettier" },
-          typescriptreact = { "typos", "prettier" },
-          javascript = { "typos", "prettier" },
+          css = { "oxfmt" },
+          html = { "oxfmt" },
+          graphql = { "typos", "oxfmt" },
+          typescript = { "typos", "oxfmt" },
+          typescriptreact = { "typos", "oxfmt" },
+          javascript = { "typos", "oxfmt" },
           elixir = { "typos", "mix" },
           sql = { "pg_format" },
-          json = { "prettier" },
+          json = { "oxfmt" },
           python = { "ruff_format" },
           ["_"] = { "trim_whitespace", "trim_newlines" },
         },
         formatters = {
           stylua = {
             prepend_args = { "--indent-type", "Spaces", "--indent-width", "2" },
+          },
+          mix = {
+            cwd = require("conform.util").root_file({ ".formatter.exs", "mix.exs" }),
+            require_cwd = true,
           },
         },
       })

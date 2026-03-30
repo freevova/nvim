@@ -37,9 +37,17 @@ return {
         },
       })
 
-      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
+      vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
+        config = config or {}
+        config.border = "rounded"
+        vim.lsp.handlers.hover(err, result, ctx, config)
+      end
 
-      vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
+      vim.lsp.handlers["textDocument/signatureHelp"] = function(err, result, ctx, config)
+        config = config or {}
+        config.border = "rounded"
+        vim.lsp.handlers.signature_help(err, result, ctx, config)
+      end
 
       local signs = { 
         Error = icons.diagnostics.Error, 
@@ -117,6 +125,9 @@ return {
 
       local on_attach = function(client, bufnr)
         -- require 'illuminate'.on_attach(client)
+        --
+        client.server_capabilities.documentHighlightProvider = false
+        client.server_capabilities.codeLensProvider = nil
 
         local bufmap = function(mode, lhs, rhs)
           local opts = { buffer = true }
@@ -157,24 +168,36 @@ return {
           on_attach(client, bufnr)
 
           local add_user_cmd = vim.api.nvim_buf_create_user_command
-          vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
-            buffer = bufnr,
-            callback = vim.lsp.codelens.refresh,
-          })
-          vim.lsp.codelens.refresh()
+          -- -- it produces errors
+          -- vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
+          --   buffer = bufnr,
+          --   callback = vim.lsp.codelens.refresh,
+          -- })
+          -- vim.lsp.codelens.refresh()
           add_user_cmd(bufnr, "ElixirFromPipe", M.from_pipe(client), {})
           add_user_cmd(bufnr, "ElixirToPipe", M.to_pipe(client), {})
           add_user_cmd(bufnr, "ElixirExpandMacro", M.expand_macro(client), { range = true })
         end,
         cmd = { "/Users/vova/projects/elixir-ls/server/language_server.sh" },
+        root_dir = function(bufnr, on_dir)
+          local fname = vim.api.nvim_buf_get_name(bufnr)
+          local root = require("lspconfig.util").root_pattern("mix.lock", ".git")(fname)
+          if root then on_dir(root) end
+        end,
         settings = {
           elixirLS = {
             dialyzerEnabled = false,
             fetchDeps = false,
+            suggestSpecs = false,
+            enableTestLenses = false,
+            mixEnv = "dev"
             -- trace = {
             --   server = "verbose"
             -- }
           },
+        },
+        flags = {
+          debounce_text_changes = 150,
         },
         capabilities = capabilities,
       })
@@ -247,6 +270,7 @@ return {
           -- root_dir = function()
           --   return vim.loop.cwd() -- або `vim.fn.getcwd()`
           -- end,
+          --
           settings = {
             sqls = {
               connections = {

@@ -1,25 +1,9 @@
 return {
-  -- -- short normal mode aliases for commonly used ex commands
-  -- "tpope/vim-unimpaired",
-
   -- for manipulation with parentheses, brackets, quotes
   "tpope/vim-surround",
 
   -- ability to edit with multiple cursors
   "mg979/vim-visual-multi",
-
-  -- plugin to place, toggle and display marks
-  { "chentoast/marks.nvim", config = true },
-
-  -- smoothie scrolling tool
-  {
-    "karb94/neoscroll.nvim",
-    config = function()
-      require("neoscroll").setup({
-        mappings = { "<C-u>", "<C-d>", "<C-y>", "<C-e>", "zt", "zz", "zb" },
-      })
-    end,
-  },
 
   -- switch between opposite terms
   {
@@ -30,46 +14,29 @@ return {
     end,
   },
 
- -- autoclose parentheses
+  -- autoclose parentheses
   {
     "windwp/nvim-autopairs",
     config = function()
       local npairs = require("nvim-autopairs")
-      local endwise = require("nvim-autopairs.ts-rule").endwise
+      local Rule = require("nvim-autopairs.rule")
 
-      npairs.setup()
+      npairs.setup({
+        check_ts = true,
+        ts_config = {
+          lua = { "string" }, -- it will not add a pair on that treesitter node
+          javascript = { "template_string" },
+          java = false, -- don't check treesitter on java
+        },
+      })
+      local ts_conds = require("nvim-autopairs.ts-conds")
+
+      -- press % => %% only while inside a comment or string
       npairs.add_rules({
-        endwise("then$", "end", "lua", nil),
+        Rule("%", "%", "lua"):with_pair(ts_conds.is_ts_node({ "string", "comment" })),
+        Rule("$", "$", "lua"):with_pair(ts_conds.is_not_ts_node({ "function" })),
       })
     end,
-  },
-
-  -- Flash enhances the built-in search functionality by showing labels
-  -- at the end of each match, letting you quickly jump to a specific
-  -- location.
-  {
-    "folke/flash.nvim",
-    vscode = true,
-    ---@type Flash.Config
-    opts = {},
-    -- stylua: ignore
-    keys = {
-      { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
-      { "S", mode = { "n", "o", "x" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
-      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
-      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
-      { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
-      -- Simulate nvim-treesitter incremental selection
-      { "<c-space>", mode = { "n", "o", "x" },
-        function()
-          require("flash").treesitter({
-            actions = {
-              ["<c-space>"] = "next",
-              ["<BS>"] = "prev"
-            }
-          }) 
-        end, desc = "Treesitter Incremental Selection" },
-    },
   },
 
   -- which-key helps you remember key bindings by showing a popup
@@ -77,6 +44,7 @@ return {
   -- { "folke/which-key.nvim", dependencies = { "echasnovski/mini.icons" } },
   {
     "folke/which-key.nvim",
+    event = "VeryLazy",
     dependencies = { "echasnovski/mini.icons" },
     opts_extend = { "spec" },
     opts = {
@@ -147,176 +115,57 @@ return {
     -- end,
   },
 
-  -- git signs highlights text that has changed since the list
-  -- git commit, and also lets you interactively stage & unstage
-  -- hunks in a commit.
+  -- better yank/paste
   {
-    "lewis6991/gitsigns.nvim",
+    "gbprod/yanky.nvim",
+    recommended = true,
+    desc = "Better Yank/Paste",
     opts = {
-      signs = {
-        add = { text = "▎" },
-        change = { text = "▎" },
-        delete = { text = "" },
-        topdelete = { text = "" },
-        changedelete = { text = "▎" },
-        untracked = { text = "▎" },
+      system_clipboard = {
+        sync_with_ring = not vim.env.SSH_CONNECTION,
       },
-      signs_staged = {
-        add = { text = "▎" },
-        change = { text = "▎" },
-        delete = { text = "" },
-        topdelete = { text = "" },
-        changedelete = { text = "▎" },
-      },
-      on_attach = function(buffer)
-        local gs = package.loaded.gitsigns
-
-        local function map(mode, l, r, desc)
-          vim.keymap.set(mode, l, r, { buffer = buffer, desc = desc, silent = true })
-        end
-
-        -- stylua: ignore start
-        map("n", "]h", function()
-          if vim.wo.diff then
-            vim.cmd.normal({ "]c", bang = true })
-          else
-            gs.nav_hunk("next")
-          end
-        end, "Next Hunk")
-        map("n", "[h", function()
-          if vim.wo.diff then
-            vim.cmd.normal({ "[c", bang = true })
-          else
-            gs.nav_hunk("prev")
-          end
-        end, "Prev Hunk")
-        map("n", "]H", function() gs.nav_hunk("last") end, "Last Hunk")
-        map("n", "[H", function() gs.nav_hunk("first") end, "First Hunk")
-        map({ "n", "x" }, "<leader>ghs", ":Gitsigns stage_hunk<CR>", "Stage Hunk")
-        map({ "n", "x" }, "<leader>ghr", ":Gitsigns reset_hunk<CR>", "Reset Hunk")
-        map("n", "<leader>ghS", gs.stage_buffer, "Stage Buffer")
-        map("n", "<leader>ghu", gs.undo_stage_hunk, "Undo Stage Hunk")
-        map("n", "<leader>ghR", gs.reset_buffer, "Reset Buffer")
-        map("n", "<leader>ghp", gs.preview_hunk_inline, "Preview Hunk Inline")
-        map("n", "<leader>ghb", function() gs.blame_line({ full = true }) end, "Blame Line")
-        map("n", "<leader>ghB", function() gs.blame() end, "Blame Buffer")
-        map("n", "<leader>ghd", gs.diffthis, "Diff This")
-        map("n", "<leader>ghD", function() gs.diffthis("~") end, "Diff This ~")
-        map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", "GitSigns Select Hunk")
-      end,
-    },
-  },
-  -- {
-  --   "gitsigns.nvim",
-  --   opts = function()
-  --     Snacks.toggle({
-  --       name = "Git Signs",
-  --       get = function()
-  --         return require("gitsigns.config").config.signcolumn
-  --       end,
-  --       set = function(state)
-  --         require("gitsigns").toggle_signs(state)
-  --       end,
-  --     }):map("<leader>uG")
-  --   end,
-  -- },
-
-  -- better diagnostics list and others
-  {
-    "folke/trouble.nvim",
-    cmd = { "Trouble" },
-    opts = {
-      modes = {
-        lsp = {
-          win = { position = "right" },
-        },
-      },
+      highlight = { timer = 150 },
     },
     keys = {
-      { "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics (Trouble)" },
-      { "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", desc = "Buffer Diagnostics (Trouble)" },
-      { "<leader>cs", "<cmd>Trouble symbols toggle<cr>", desc = "Symbols (Trouble)" },
-      { "<leader>cS", "<cmd>Trouble lsp toggle<cr>", desc = "LSP references/definitions/... (Trouble)" },
-      { "<leader>xL", "<cmd>Trouble loclist toggle<cr>", desc = "Location List (Trouble)" },
-      { "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List (Trouble)" },
       {
-        "[q",
+        "<leader>p",
         function()
-          if require("trouble").is_open() then
-            require("trouble").prev({ skip_groups = true, jump = true })
+          if LazyVim.pick.picker.name == "telescope" then
+            require("telescope").extensions.yank_history.yank_history({})
+          elseif LazyVim.pick.picker.name == "snacks" then
+            Snacks.picker.yanky()
           else
-            local ok, err = pcall(vim.cmd.cprev)
-            if not ok then
-              vim.notify(err, vim.log.levels.ERROR)
-            end
+            vim.cmd([[YankyRingHistory]])
           end
-        end,
-        desc = "Previous Trouble/Quickfix Item",
-      },
-      {
-        "]q",
-        function()
-          if require("trouble").is_open() then
-            require("trouble").next({ skip_groups = true, jump = true })
-          else
-            local ok, err = pcall(vim.cmd.cnext)
-            if not ok then
-              vim.notify(err, vim.log.levels.ERROR)
-            end
-          end
-        end,
-        desc = "Next Trouble/Quickfix Item",
-      },
-    },
-  },
-
-  -- Finds and lists all of the TODO, HACK, BUG, etc comment
-  -- in your project and loads them into a browsable list.
-  {
-    "folke/todo-comments.nvim",
-    cmd = { "TodoTrouble", "TodoTelescope" },
-    opts = {},
-    -- stylua: ignore
-    keys = {
-      { "]t", function() require("todo-comments").jump_next() end, desc = "Next Todo Comment" },
-      { "[t", function() require("todo-comments").jump_prev() end, desc = "Previous Todo Comment" },
-      { "<leader>xt", "<cmd>Trouble todo toggle<cr>", desc = "Todo (Trouble)" },
-      { "<leader>xT", "<cmd>Trouble todo toggle filter = {tag = {TODO,FIX,FIXME}}<cr>", desc = "Todo/Fix/Fixme (Trouble)" },
-      { "<leader>st", "<cmd>TodoTelescope<cr>", desc = "Todo" },
-      { "<leader>sT", "<cmd>TodoTelescope keywords=TODO,FIX,FIXME<cr>", desc = "Todo/Fix/Fixme" },
-    },
-  },
-  
-
-  -- search/replace in multiple files
-  {
-    "MagicDuck/grug-far.nvim",
-    opts = { headerMaxWidth = 80 },
-    cmd = { "GrugFar", "GrugFarWithin" },
-    keys = {
-      {
-        "<leader>sr",
-        function()
-          local grug = require("grug-far")
-          local ext = vim.bo.buftype == "" and vim.fn.expand("%:e")
-          grug.open({
-            transient = true,
-            prefills = {
-              filesFilter = ext and ext ~= "" and "*." .. ext or nil,
-            },
-          })
         end,
         mode = { "n", "x" },
-        desc = "Search and Replace",
+        desc = "Open Yank History",
       },
+        -- stylua: ignore
+      { "y", "<Plug>(YankyYank)", mode = { "n", "x" }, desc = "Yank Text" },
+      { "p", "<Plug>(YankyPutAfter)", mode = { "n", "x" }, desc = "Put Text After Cursor" },
+      { "P", "<Plug>(YankyPutBefore)", mode = { "n", "x" }, desc = "Put Text Before Cursor" },
+      { "gp", "<Plug>(YankyGPutAfter)", mode = { "n", "x" }, desc = "Put Text After Selection" },
+      { "gP", "<Plug>(YankyGPutBefore)", mode = { "n", "x" }, desc = "Put Text Before Selection" },
+      { "[y", "<Plug>(YankyCycleForward)", desc = "Cycle Forward Through Yank History" },
+      { "]y", "<Plug>(YankyCycleBackward)", desc = "Cycle Backward Through Yank History" },
+      { "]p", "<Plug>(YankyPutIndentAfterLinewise)", desc = "Put Indented After Cursor (Linewise)" },
+      { "[p", "<Plug>(YankyPutIndentBeforeLinewise)", desc = "Put Indented Before Cursor (Linewise)" },
+      { "]P", "<Plug>(YankyPutIndentAfterLinewise)", desc = "Put Indented After Cursor (Linewise)" },
+      { "[P", "<Plug>(YankyPutIndentBeforeLinewise)", desc = "Put Indented Before Cursor (Linewise)" },
+      { ">p", "<Plug>(YankyPutIndentAfterShiftRight)", desc = "Put and Indent Right" },
+      { "<p", "<Plug>(YankyPutIndentAfterShiftLeft)", desc = "Put and Indent Left" },
+      { ">P", "<Plug>(YankyPutIndentBeforeShiftRight)", desc = "Put Before and Indent Right" },
+      { "<P", "<Plug>(YankyPutIndentBeforeShiftLeft)", desc = "Put Before and Indent Left" },
+      { "=p", "<Plug>(YankyPutAfterFilter)", desc = "Put After Applying a Filter" },
+      { "=P", "<Plug>(YankyPutBeforeFilter)", desc = "Put Before Applying a Filter" },
     },
   },
 
-
--- This Vim script adds motions similar to w, b, e that navigate not by whole words but by CamelCase and
--- underscore_notation boundaries within identifiers (e.g., stopping at each capitalized segment or 
--- underscore-delimited part). It also provides an inner "word" text object for selecting and operating on 
--- individual sub-parts of such identifiers.
+  -- This Vim script adds motions similar to w, b, e that navigate not by whole words but by CamelCase and
+  -- underscore_notation boundaries within identifiers (e.g., stopping at each capitalized segment or
+  -- underscore-delimited part). It also provides an inner "word" text object for selecting and operating on
+  -- individual sub-parts of such identifiers.
   {
     "bkad/CamelCaseMotion",
     config = function()
@@ -324,27 +173,6 @@ return {
       vim.api.nvim_set_keymap("", "b", "<Plug>CamelCaseMotion_b", {})
       vim.api.nvim_set_keymap("", "e", "<Plug>CamelCaseMotion_e", {})
       vim.api.nvim_set_keymap("", "ge", "<Plug>CamelCaseMotion_ge", {})
-    end,
-  },
-
-  -- send commands to tmux pane
-  {
-    "jgdavey/tslime.vim",
-    init = function()
-      vim.g.tslime_always_current_session = 1 -- run in current session
-    end,
-  },
-
-  -- test runner
-  {
-    "vim-test/vim-test",
-    dependencies = { "jgdavey/tslime.vim" },
-    config = function()
-      vim.cmd("let test#strategy = 'tslime'")
-
-      vim.api.nvim_set_keymap("n", "<space>tn", ":TestNearest<CR>", { noremap = false })
-      vim.api.nvim_set_keymap("n", "<space>tf", ":TestFile<CR>", { noremap = false })
-      vim.api.nvim_set_keymap("n", "<space>tl", ":TestLast<CR>", { noremap = false })
     end,
   },
 }

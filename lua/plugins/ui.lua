@@ -17,77 +17,36 @@ return {
 
   -- display colors in file
   "norcalli/nvim-colorizer.lua",
-  
+
   -- plugin for automatically highlighting other uses of the word under the cursor
   {
     "RRethy/vim-illuminate",
     config = function()
-      -- default configuration
       require("illuminate").configure({
-        -- providers: provider used to get references in the buffer, ordered by priority
         providers = {
-          -- "lsp",
-          -- "treesitter",
+          "lsp",
+          "treesitter",
           "regex",
         },
-        -- delay: delay in milliseconds
-        delay = 100,
-        -- filetype_overrides: filetype specific overrides.
-        -- The keys are strings to represent the filetype while the values are tables that
-        -- supports the same keys passed to .configure except for filetypes_denylist and filetypes_allowlist
-        filetype_overrides = {},
-        -- filetypes_denylist: filetypes to not illuminate, this overrides filetypes_allowlist
-        filetypes_denylist = {
-          "fugitive",
-          "NvimTree",
-          "startify",
-        },
-        -- filetypes_allowlist: filetypes to illuminate, this is overridden by filetypes_denylist
-        -- You must set filetypes_denylist = {} to override the defaults to allow filetypes_allowlist to take effect
-        filetypes_allowlist = {},
-        -- modes_denylist: modes to not illuminate, this overrides modes_allowlist
-        -- See `:help mode()` for possible values
-        modes_denylist = {},
-        -- modes_allowlist: modes to illuminate, this is overridden by modes_denylist
-        -- See `:help mode()` for possible values
-        modes_allowlist = {},
-        -- providers_regex_syntax_denylist: syntax to not illuminate, this overrides providers_regex_syntax_allowlist
-        -- Only applies to the 'regex' provider
-        -- Use :echom synIDattr(synIDtrans(synID(line('.'), col('.'), 1)), 'name')
-        providers_regex_syntax_denylist = {},
-        -- providers_regex_syntax_allowlist: syntax to illuminate, this is overridden by providers_regex_syntax_denylist
-        -- Only applies to the 'regex' provider
-        -- Use :echom synIDattr(synIDtrans(synID(line('.'), col('.'), 1)), 'name')
-        providers_regex_syntax_allowlist = {},
-        -- under_cursor: whether or not to illuminate under the cursor
-        under_cursor = true,
-        -- large_file_cutoff: number of lines at which to use large_file_config
-        -- The `under_cursor` option is disabled when this cutoff is hit
-        large_file_cutoff = 10000,
-        -- large_file_config: config to use for large files (based on large_file_cutoff).
-        -- Supports the same keys passed to .configure
-        -- If nil, vim-illuminate will be disabled for large files.
-        large_file_overrides = nil,
-        -- min_count_to_highlight: minimum number of matches required to perform highlighting
-        min_count_to_highlight = 1,
-        -- should_enable: a callback that overrides all other settings to
-        -- enable/disable illumination. This will be called a lot so don't do
-        -- anything expensive in it.
-        should_enable = function(bufnr)
-          return true
-        end,
-        -- case_insensitive_regex: sets regex case sensitivity
-        case_insensitive_regex = false,
-        -- disable_keymaps: disable default keymaps
-        disable_keymaps = false,
+        filetypes_denylist = { "fugitive", "NvimTree" },
       })
     end,
   },
 
-  -- This is what powers LazyVim's fancy-looking
-  -- tabs, which include filetype icons and close buttons.
+  -- smoothie scrolling tool
+  {
+    "karb94/neoscroll.nvim",
+    config = function()
+      require("neoscroll").setup({
+        mappings = { "<C-u>", "<C-d>", "<C-y>", "<C-e>", "zt", "zz", "zb" },
+      })
+    end,
+  },
+
+  -- A snazzy 💅 buffer line (with tabpage integration) for Neovim built using lua.
   {
     "akinsho/bufferline.nvim",
+    event = "VeryLazy",
     keys = {
       { "<leader>bp", "<Cmd>BufferLineTogglePin<CR>", desc = "Toggle Pin" },
       { "<leader>bP", "<Cmd>BufferLineGroupClose ungrouped<CR>", desc = "Delete Non-Pinned Buffers" },
@@ -163,7 +122,7 @@ return {
         },
         sections = {
           lualine_a = { "mode" },
-          lualine_b = { 
+          lualine_b = {
             {
               "diff",
               symbols = {
@@ -178,11 +137,10 @@ return {
                     added = gitsigns.added,
                     modified = gitsigns.changed,
                     removed = gitsigns.removed,
-
                   }
                 end
               end,
-            }
+            },
           },
           lualine_c = {
             { "filetype", icon_only = true, separator = "", padding = { left = 1, right = 0 } },
@@ -199,7 +157,7 @@ return {
           },
           lualine_x = { "encoding", "fileformat", "filetype" },
           lualine_y = { "progress", "location" },
-          lualine_z = { 
+          lualine_z = {
             function()
               return " " .. os.date("%R")
             end,
@@ -214,7 +172,7 @@ return {
           lualine_z = {},
         },
         tabline = {},
-        extensions = { "nvim-tree", "fzf", "fugitive" },
+        extensions = { "neo-tree", "fzf", "fugitive" },
       })
     end,
   },
@@ -240,48 +198,48 @@ return {
     end,
   },
 
+  -- {
+  --   "MeanderingProgrammer/render-markdown.nvim",
+  --   opts = {
+  --     code = {
+  --       sign = false,
+  --       width = "block",
+  --       right_pad = 1,
+  --     },
+  --     heading = {
+  --       sign = false,
+  --       icons = {},
+  --     },
+  --     checkbox = {
+  --       enabled = false,
+  --     },
+  --   },
+  --   ft = { "markdown", "norg", "rmd", "org", "codecompanion" },
+  --   config = function(_, opts)
+  --     require("render-markdown").setup(opts)
+  --     Snacks.toggle({
+  --       name = "Render Markdown",
+  --       get = require("render-markdown").get,
+  --       set = require("render-markdown").set,
+  --     }):map("<leader>um")
+  --   end,
+  -- },
+
+  --  hackable Markdown, HTML, LaTeX, Typst & YAML previewer for Neovim.
   {
-    "MeanderingProgrammer/render-markdown.nvim",
-    opts = {
-      code = {
-        sign = false,
-        width = "block",
-        right_pad = 1,
-      },
-      heading = {
-        sign = false,
-        icons = {},
-      },
-      checkbox = {
-        enabled = false,
-      },
+    "OXY2DEV/markview.nvim",
+    lazy = false,
+
+    -- For `nvim-treesitter` users.
+    priority = 49,
+
+    -- For blink.cmp's completion
+    -- source
+    dependencies = {
+      "saghen/blink.cmp",
     },
-    ft = { "markdown", "norg", "rmd", "org", "codecompanion" },
-    config = function(_, opts)
-      require("render-markdown").setup(opts)
-      Snacks.toggle({
-        name = "Render Markdown",
-        get = require("render-markdown").get,
-        set = require("render-markdown").set,
-      }):map("<leader>um")
-    end,
   },
 
-  -- --  hackable Markdown, HTML, LaTeX, Typst & YAML previewer for Neovim.
-  -- {
-  --   "OXY2DEV/markview.nvim",
-  --   lazy = false,
-  --
-  --   -- For `nvim-treesitter` users.
-  --   priority = 49,
-  --
-  --   -- For blink.cmp's completion
-  --   -- source
-  --   -- dependencies = {
-  --   --     "saghen/blink.cmp"
-  --   -- },
-  -- },
-  --
   -- indent guides
   {
     "lukas-reineke/indent-blankline.nvim",
@@ -307,46 +265,46 @@ return {
     end,
   },
 
-  -- file explorer
-  {
-    "nvim-tree/nvim-tree.lua",
-    version = "*",
-    lazy = false,
-    dependencies = { "nvim-tree/nvim-web-devicons" },
-    config = function()
-      local function on_attach(bufnr)
-        local api = require("nvim-tree.api")
+  -- -- file explorer
+  -- {
+  --   "nvim-tree/nvim-tree.lua",
+  --   version = "*",
+  --   lazy = false,
+  --   dependencies = { "nvim-tree/nvim-web-devicons" },
+  --   config = function()
+  --     local function on_attach(bufnr)
+  --       local api = require("nvim-tree.api")
+  --
+  --       local function opts(desc)
+  --         return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+  --       end
+  --       -- default mappings
+  --       api.config.mappings.default_on_attach(bufnr)
+  --
+  --       -- custom mappings
+  --       vim.keymap.set("n", "|", api.node.open.vertical, opts("Open: Vertical Split"))
+  --       vim.keymap.set("n", "_", api.node.open.horizontal, opts("Open: Horizontal Split"))
+  --       vim.keymap.set("n", "?", api.tree.toggle_help, opts("Help"))
+  --
+  --       vim.api.nvim_set_keymap("", "<C-p>", ":NvimTreeToggle<CR>", { noremap = true })
+  --       vim.api.nvim_set_keymap("", "<C-F>", ":NvimTreeFindFile<CR>", { noremap = true })
+  --     end
+  --
+  --     require("nvim-tree").setup({
+  --       on_attach = on_attach,
+  --       view = {
+  --         width = 50,
+  --       },
+  --       renderer = {
+  --         special_files = {}, -- don't highlight readme files
+  --         indent_markers = {
+  --           enable = true,
+  --         },
+  --       },
+  --     })
+  --   end,
+  -- },
 
-        local function opts(desc)
-          return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
-        end
-        -- default mappings
-        api.config.mappings.default_on_attach(bufnr)
-
-        -- custom mappings
-        vim.keymap.set("n", "|", api.node.open.vertical, opts("Open: Vertical Split"))
-        vim.keymap.set("n", "_", api.node.open.horizontal, opts("Open: Horizontal Split"))
-        vim.keymap.set("n", "?", api.tree.toggle_help, opts("Help"))
-
-        vim.api.nvim_set_keymap("", "<C-p>", ":NvimTreeToggle<CR>", { noremap = true })
-        vim.api.nvim_set_keymap("", "<C-F>", ":NvimTreeFindFile<CR>", { noremap = true })
-      end
-
-      require("nvim-tree").setup({
-        on_attach = on_attach,
-        view = {
-          width = 50,
-        },
-        renderer = {
-          special_files = {}, -- don't highlight readme files
-          indent_markers = {
-            enable = true,
-          },
-        },
-      })
-    end,
-  },
-  
   {
     "snacks.nvim",
     opts = {

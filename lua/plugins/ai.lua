@@ -35,7 +35,7 @@ return {
     keys = {
       { "<leader>a", "", desc = "+ai", mode = { "n", "v" } },
       { "<leader>ac", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude" },
-      -- { "<leader>af", "<cmd>ClaudeCodeFocus<cr>", desc = "Focus Claude" },
+      { "<leader>af", "<cmd>ClaudeCodeFocus<cr>", desc = "Focus Claude" },
       { "<C-,>", "<cmd>ClaudeCodeFocus<cr>", desc = "Claude Code", mode = { "n", "x" } },
       { "<leader>ar", "<cmd>ClaudeCode --resume<cr>", desc = "Resume Claude" },
       { "<leader>aC", "<cmd>ClaudeCode --continue<cr>", desc = "Continue Claude" },

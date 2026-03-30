@@ -1,6 +1,8 @@
 -- Options are automatically loaded before lazy.nvim startup
 -- Default options that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/options.lua
 -- Add any additional options here
+vim.g.loaded_netrw = 1 -- disable built-in file explorer (netrw) in favor of neo-tree
+vim.g.loaded_netrwPlugin = 1
 vim.g.mapleader = "," -- leader key
 vim.g.maplocalleader = "\\" -- leader key
 vim.g.python3_host_prog = "~/.pyenv/versions/3.13.3/bin/python3"
