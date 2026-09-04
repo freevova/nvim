@@ -8,6 +8,8 @@ local function term_nav(dir)
   end
 end
 
+local icons = require("config.icons")
+
 return {
   -- zooming vim window splits
   "dhruvasagar/vim-zoom",
@@ -65,10 +67,9 @@ return {
         diagnostics = "nvim_lsp",
         always_show_bufferline = false,
         diagnostics_indicator = function(_, _, diag)
-          icons = require("config.icons")
-          local icons = icons.diagnostics
-          local ret = (diag.error and icons.Error .. diag.error .. " " or "")
-            .. (diag.warning and icons.Warn .. diag.warning or "")
+          local diag_icons = icons.diagnostics
+          local ret = (diag.error and diag_icons.Error .. diag.error .. " " or "")
+            .. (diag.warning and diag_icons.Warn .. diag.warning or "")
           return vim.trim(ret)
         end,
         offsets = {
@@ -106,8 +107,6 @@ return {
     "nvim-lualine/lualine.nvim",
     dependencies = { { "ryanoasis/vim-devicons", lazy = true } },
     config = function()
-      icons = require("config.icons")
-
       require("lualine").setup({
         options = {
           icons_enabled = true,
@@ -215,21 +214,6 @@ return {
       }):map("<leader>um")
     end,
   },
-
-  --  hackable Markdown, HTML, LaTeX, Typst & YAML previewer for Neovim.
-  -- {
-  --   "OXY2DEV/markview.nvim",
-  --   lazy = false,
-  --
-  --   -- For `nvim-treesitter` users.
-  --   priority = 49,
-  --
-  --   -- For blink.cmp's completion
-  --   -- source
-  --   dependencies = {
-  --     "saghen/blink.cmp",
-  --   },
-  -- },
 
   -- indent guides
   {

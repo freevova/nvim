@@ -130,14 +130,6 @@ return {
           CmpItemKindKeyword = { fg = "#D4D4D4" },
           CmpItemKindProperty = { fg = "#D4D4D4" },
           CmpItemKindUnit = { fg = "#D4D4D4" },
-
-          -- explicitly set green color, as in the theme this group is linked to itself
-          -- https://github.com/EdenEast/nightfox.nvim/blob/a408e6bb101066952b81de9c11be367114bd561f/lua/nightfox/group/modules/nvimtree.lua#L30
-          NvimTreeGitStaged = { fg = palettes.nightfox.green },
-          -- vim.api.nvim_set_hl(0, "NvimTreeGitStaged", { fg = palettes.nightfox.green })
-          -- vim.api.nvim_set_hl(0, "NvimTreeGitNew", { fg = palettes.nightfox.yellow })
-          -- vim.api.nvim_set_hl(0, "NvimTreeGitDirty", { fg = palettes.nightfox.pink })
-          --
         },
       }
       local options = {

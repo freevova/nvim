@@ -6,24 +6,6 @@ return {
       local telescope = require("telescope")
       local actions = require("telescope.actions")
 
-      local map = function(mode, lhs, rhs)
-        local opts = { noremap = true, silent = true }
-        vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
-      end
-
-      function project_files()
-        local opts = {
-          layout_config = {
-            prompt_position = "top",
-          },
-          sorting_strategy = "ascending",
-        }
-        local ok = pcall(require("telescope.builtin").git_files, opts)
-        if not ok then
-          require("telescope.builtin").find_files(opts)
-        end
-      end
-
       local builtin = require("telescope.builtin")
       -- these live in the which-key "search" group (<leader>s, see plugins/editor.lua)
       vim.keymap.set("n", "<leader>sf", builtin.find_files, { desc = "Find files" })

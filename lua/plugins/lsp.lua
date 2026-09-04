@@ -13,13 +13,6 @@ return {
         update_in_insert = false,
         severity_sort = true,
         virtual_text = false,
-        -- virtual_text = {
-        --   spacing = 4,
-        --   source = "if_many",
-        --   prefix = "●",
-        --   -- this will set set the prefix to a function that returns the diagnostics icon based on the severity
-        --   -- prefix = "icons",
-        -- },
         float = {
           border = "rounded",
           source = "always",
@@ -99,8 +92,6 @@ return {
       end
 
       local on_attach = function(client, bufnr)
-        -- require 'illuminate'.on_attach(client)
-        --
         client.server_capabilities.documentHighlightProvider = false
         client.server_capabilities.codeLensProvider = nil
 
@@ -153,23 +144,16 @@ return {
         require("lsp-file-operations").default_capabilities()
       )
 
-      -- lspconfig.elixirls.setup({
       vim.lsp.config("elixirls", {
         on_attach = function(client, bufnr)
           on_attach(client, bufnr)
 
           local add_user_cmd = vim.api.nvim_buf_create_user_command
-          -- -- it produces errors
-          -- vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
-          --   buffer = bufnr,
-          --   callback = vim.lsp.codelens.refresh,
-          -- })
-          -- vim.lsp.codelens.refresh()
           add_user_cmd(bufnr, "ElixirFromPipe", M.from_pipe(client), {})
           add_user_cmd(bufnr, "ElixirToPipe", M.to_pipe(client), {})
           add_user_cmd(bufnr, "ElixirExpandMacro", M.expand_macro(client), { range = true })
         end,
-        cmd = { "/Users/vova/projects/elixir-ls/server/language_server.sh" },
+        cmd = { vim.fn.expand("~/projects/elixir-ls/server/language_server.sh") },
         -- mix.lock exists only at the umbrella root, so nested apps resolve to it;
         -- a function is needed because lspconfig's default root_dir would otherwise
         -- win over root_markers
@@ -185,10 +169,7 @@ return {
             fetchDeps = false,
             suggestSpecs = false,
             enableTestLenses = false,
-            mixEnv = "dev"
-            -- trace = {
-            --   server = "verbose"
-            -- }
+            mixEnv = "dev",
           },
         },
         flags = {
@@ -198,7 +179,6 @@ return {
       })
 
       vim.lsp.config("ts_ls", {
-      -- lspconfig.ts_ls.setup({
         on_attach = on_attach,
         capabilities = capabilities,
       })
@@ -212,78 +192,20 @@ return {
         return true
       end
 
+      -- sqls is only configured inside a project that exports DATABASE_* vars
       if
         all_env_vars_set({ "DATABASE_HOST", "DATABASE_PORT", "DATABASE_USERNAME", "DATABASE_PASSWORD", "DATABASE_NAME" })
       then
-        -- print(
-        --   "DSN: host="
-        --     .. os.getenv("DATABASE_HOST")
-        --     .. " port="
-        --     .. os.getenv("DATABASE_PORT")
-        --     .. " user="
-        --     .. os.getenv("DATABASE_USERNAME")
-        --     .. " password="
-        --     .. os.getenv("DATABASE_PASSWORD")
-        --     .. " dbname="
-        --     .. os.getenv("DATABASE_NAME")
-        --     .. " sslmode=disable"
-        -- )
-        local function build_sqls_dsn()
-          local vars = {
-            DATABASE_HOST = os.getenv("DATABASE_HOST"),
-            DATABASE_PORT = os.getenv("DATABASE_PORT"),
-            DATABASE_USERNAME = os.getenv("DATABASE_USERNAME"),
-            DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD"),
-            DATABASE_NAME = os.getenv("DATABASE_NAME"),
-          }
-
-          for k, v in pairs(vars) do
-            if not v then
-              error("Missing env var: " .. k)
-            end
-          end
-
-          local dsn = string.format(
-            "host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-            vars.DATABASE_HOST,
-            vars.DATABASE_PORT,
-            vars.DATABASE_USERNAME,
-            vars.DATABASE_PASSWORD,
-            vars.DATABASE_NAME
-          )
-
-          print("DSN: " .. dsn)
-          return dsn
-        end
-        -- lspconfig.sqls.setup({
         vim.lsp.config("sqls", {
           on_attach = function(client, bufnr)
-            require("sqls").on_attach(client, bufnr) -- require sqls.nvim
-            -- on_attach(client, bufnr)
+            require("sqls").on_attach(client, bufnr)
           end,
-          -- cmd = { "sqls" },
-          -- root_dir = function()
-          --   return vim.loop.cwd() -- або `vim.fn.getcwd()`
-          -- end,
-          --
           settings = {
             sqls = {
               connections = {
                 {
                   driver = "postgresql",
-                  -- dataSourceName = build_sqls_dsn(),
                   dataSourceName = "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=prosapient_dev sslmode=disable",
-                  --   dataSourceName = "host="
-                  --     .. os.getenv("DATABASE_HOST")
-                  --     .. " port="
-                  --     .. os.getenv("DATABASE_PORT")
-                  --     .. " user="
-                  --     .. os.getenv("DATABASE_USERNAME")
-                  --     .. " password="
-                  --     .. os.getenv("DATABASE_PASSWORD")
-                  --     .. " dbname="
-                  --     .. os.getenv("DATABASE_NAME")
-                  --     .. " sslmode=disable",
                 },
               },
             },
@@ -291,7 +213,6 @@ return {
         })
       end
 
-      -- vim.lsp.set_log_level("debug")
       vim.lsp.inlay_hint.enable()
       vim.lsp.enable('elixirls')
       vim.lsp.enable('ts_ls')
