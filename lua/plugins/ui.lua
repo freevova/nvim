@@ -85,10 +85,6 @@ return {
             filetype = "snacks_layout_box",
           },
         },
-        ---@param opts bufferline.IconFetcherOpts
-        get_element_icon = function(opts)
-          return icons.ft[opts.filetype]
-        end,
       },
     },
     config = function(_, opts)

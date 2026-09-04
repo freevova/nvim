@@ -1,3 +1,5 @@
+local icons = require("config.icons")
+
 return {
   -- file explorer
   {
@@ -192,11 +194,25 @@ return {
           expander_expanded = "",
           expander_highlight = "NeoTreeExpander",
         },
+        icon = {
+          folder_closed = icons.folders.closed,
+          folder_open = icons.folders.open,
+          folder_empty = icons.folders.empty,
+          folder_empty_open = icons.folders.empty_open,
+          default = icons.folders.default_file,
+        },
         git_status = {
-          symbols = {
-            unstaged = "󰄱",
-            staged = "󰱒",
-          },
+          symbols = vim.tbl_map(vim.trim, {
+            added = icons.git.added,
+            modified = icons.git.modified,
+            deleted = icons.git.removed,
+            renamed = icons.git.renamed,
+            untracked = icons.git.untracked,
+            ignored = icons.git.ignored,
+            unstaged = icons.git.unstaged,
+            staged = icons.git.staged,
+            conflict = icons.git.conflict,
+          }),
         },
       },
     },

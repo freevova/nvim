@@ -239,7 +239,7 @@ return {
   {
     "saghen/blink.cmp",
     event = { "InsertEnter", "CmdlineEnter" },
-    dependencies = { "rafamadriz/friendly-snippets", "onsails/lspkind-nvim" },
+    dependencies = { "rafamadriz/friendly-snippets" },
     version = "1.*",
     opts = {
       keymap = {
@@ -258,7 +258,7 @@ return {
         ["<C-d>"] = { "snippet_forward", "fallback" },
         ["<C-b>"] = { "snippet_backward", "fallback" },
       },
-      appearance = { nerd_font_variant = "mono" },
+      appearance = { nerd_font_variant = "mono", kind_icons = require("config.icons").kinds },
       completion = {
 
         accept = {
@@ -285,8 +285,6 @@ return {
                       if dev_icon then
                           icon = dev_icon
                       end
-                  else
-                      icon = require("lspkind").symbol_map[ctx.kind] or ""
                   end
 
                   return icon .. ctx.icon_gap
