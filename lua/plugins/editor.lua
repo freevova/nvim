@@ -196,18 +196,12 @@ return {
     },
     keys = {
       {
-        "<leader>p",
+        "<leader>sp",
         function()
-          if LazyVim.pick.picker.name == "telescope" then
-            require("telescope").extensions.yank_history.yank_history({})
-          elseif LazyVim.pick.picker.name == "snacks" then
-            Snacks.picker.yanky()
-          else
-            vim.cmd([[YankyRingHistory]])
-          end
+          require("telescope").extensions.yank_history.yank_history()
         end,
         mode = { "n", "x" },
-        desc = "Open Yank History",
+        desc = "Yank history",
       },
         -- stylua: ignore
       { "y", "<Plug>(YankyYank)", mode = { "n", "x" }, desc = "Yank Text" },

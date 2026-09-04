@@ -24,22 +24,17 @@ vim.api.nvim_create_autocmd({ "VimResized" }, {
 -- close some filetypes with <q>
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup("close_with_q"),
+  -- only helper windows without their own q; Trouble, Outline, neo-tree,
+  -- Lazy and man already close on q
   pattern = {
-    -- "PlenaryTestPopup",
-    -- "checkhealth",
-    -- "dbout",
-    -- "gitsigns-blame",
-    -- "grug-far",
-    -- "help",
-    -- "lspinfo",
-    -- "neotest-output",
-    -- "neotest-output-panel",
-    -- "neotest-summary",
-    -- "notify",
-    -- "qf",
-    -- "spectre_panel",
-    -- "startuptime",
-    -- "tsplayground",
+    "checkhealth",
+    "fugitive",
+    "fugitiveblame",
+    "git",
+    "gitsigns-blame",
+    "grug-far",
+    "help",
+    "qf",
   },
   callback = function(event)
     vim.bo[event.buf].buflisted = false

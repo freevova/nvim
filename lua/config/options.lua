@@ -5,7 +5,6 @@ vim.g.loaded_netrw = 1 -- disable built-in file explorer (netrw) in favor of neo
 vim.g.loaded_netrwPlugin = 1
 vim.g.mapleader = "," -- leader key
 vim.g.maplocalleader = "\\" -- leader key
-vim.g.python3_host_prog = "~/.pyenv/versions/3.13.3/bin/python3"
 
 
 -- Show the current document symbols location from Trouble in lualine
@@ -72,6 +71,6 @@ opt.foldlevelstart = 99
 opt.foldtext = "" -- folded line keeps treesitter highlighting
 opt.wildmode = "longest:full,full" -- Command-line completion mode
 opt.winminwidth = 5 -- Minimum window width
+opt.winborder = "rounded" -- border for floating windows that do not set their own (hover, signature help, diagnostics)
 
-vim.api.wildmenu = true -- command-mode completion
-vim.api.wildignorecase = true -- wildmenu ignores case
+opt.wildignorecase = true -- wildmenu ignores case

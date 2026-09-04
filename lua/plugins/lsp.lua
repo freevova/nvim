@@ -6,8 +6,7 @@ return {
   {
     "neovim/nvim-lspconfig",
     config = function()
-      lspconfig = require("lspconfig")
-      icons = require("config.icons")
+      local icons = require("config.icons")
 
       vim.diagnostic.config({
         underline = true,
@@ -37,34 +36,10 @@ return {
         },
       })
 
-      vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
-        config = config or {}
-        config.border = "rounded"
-        vim.lsp.handlers.hover(err, result, ctx, config)
-      end
-
-      vim.lsp.handlers["textDocument/signatureHelp"] = function(err, result, ctx, config)
-        config = config or {}
-        config.border = "rounded"
-        vim.lsp.handlers.signature_help(err, result, ctx, config)
-      end
-
-      local signs = { 
-        Error = icons.diagnostics.Error, 
-        Warning = icons.diagnostics.Warn, 
-        Hint = icons.diagnostics.Hint, 
-        Information = icons.diagnostics.Info 
-      }
-
-      for type, icon in pairs(signs) do
-        local hl = "DiagnosticSign" .. type
-        vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-      end
-
       local manipulate_pipes = function(direction, client)
-        local position_params = vim.lsp.util.make_position_params()
+        local position_params = vim.lsp.util.make_position_params(0, client.offset_encoding)
 
-        client.request_sync("workspace/executeCommand", {
+        client:request_sync("workspace/executeCommand", {
           command = "manipulatePipes:serverid",
           arguments = {
             direction,
@@ -91,7 +66,7 @@ return {
 
       function M.expand_macro(client)
         return function()
-          local params = vim.lsp.util.make_given_range_params()
+          local params = vim.lsp.util.make_given_range_params(nil, nil, 0, client.offset_encoding)
 
           local text = vim.api.nvim_buf_get_text(
             0,
@@ -102,7 +77,7 @@ return {
             {}
           )
 
-          local resp = client.request_sync("workspace/executeCommand", {
+          local resp = client:request_sync("workspace/executeCommand", {
             command = "expandMacro:serverid",
             arguments = { params.textDocument.uri, vim.fn.join(text, "\n"), params.range.start.line },
           }, nil, 0)
@@ -111,14 +86,14 @@ return {
           if resp["result"] then
             for k, v in pairs(resp.result) do
               vim.list_extend(content, { "# " .. k, "" })
-              vim.list_extend(content, vim.split(v, "\n"))
+              vim.list_extend(content, vim.split(v, "\n", { trimempty = true }))
             end
           else
             table.insert(content, "Error")
           end
 
           vim.schedule(function()
-            vim.lsp.util.open_floating_preview(vim.lsp.util.trim_empty_lines(content), "elixir", {})
+            vim.lsp.util.open_floating_preview(content, "elixir", {})
           end)
         end
       end
@@ -196,10 +171,14 @@ return {
           add_user_cmd(bufnr, "ElixirExpandMacro", M.expand_macro(client), { range = true })
         end,
         cmd = { "/Users/vova/projects/elixir-ls/server/language_server.sh" },
+        -- mix.lock exists only at the umbrella root, so nested apps resolve to it;
+        -- a function is needed because lspconfig's default root_dir would otherwise
+        -- win over root_markers
         root_dir = function(bufnr, on_dir)
-          local fname = vim.api.nvim_buf_get_name(bufnr)
-          local root = require("lspconfig.util").root_pattern("mix.lock", ".git")(fname)
-          if root then on_dir(root) end
+          local root = vim.fs.root(bufnr, { "mix.lock", ".git" })
+          if root then
+            on_dir(root)
+          end
         end,
         settings = {
           elixirLS = {
