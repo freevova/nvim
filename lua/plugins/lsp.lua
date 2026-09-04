@@ -1,6 +1,7 @@
 return {
   -- Neovim plugin for sqls that leverages the built-in LSP client
-  { "nanotee/sqls.nvim", ft = "sql" },
+  -- not lazy: its lsp/sqls.lua must be on the runtimepath when vim.lsp.config("sqls") is resolved
+  { "nanotee/sqls.nvim", lazy = false },
 
   -- collection of common configurations for built-in language server client
   {
@@ -194,23 +195,42 @@ return {
       end
 
       -- sqls is only configured inside a project that exports DATABASE_* vars
-      if
-        all_env_vars_set({ "DATABASE_HOST", "DATABASE_PORT", "DATABASE_USERNAME", "DATABASE_PASSWORD", "DATABASE_NAME" })
-      then
+      -- (direnv in platform-backend); the port is optional there
+      if all_env_vars_set({ "DATABASE_HOST", "DATABASE_USERNAME", "DATABASE_PASSWORD", "DATABASE_NAME" }) then
+        -- commands and <Plug> maps come from sqls.nvim's own lsp/sqls.lua on_attach
         vim.lsp.config("sqls", {
-          on_attach = function(client, bufnr)
-            require("sqls").on_attach(client, bufnr)
-          end,
           settings = {
             sqls = {
               connections = {
                 {
                   driver = "postgresql",
-                  dataSourceName = "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=prosapient_dev sslmode=disable",
+                  dataSourceName = ("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable"):format(
+                    os.getenv("DATABASE_HOST"),
+                    os.getenv("DATABASE_PORT") or "5432",
+                    os.getenv("DATABASE_USERNAME"),
+                    os.getenv("DATABASE_PASSWORD"),
+                    os.getenv("DATABASE_NAME")
+                  ),
                 },
               },
             },
           },
+        })
+        vim.lsp.enable("sqls")
+
+        -- <Plug>(sqls-execute-query) is an operator: glqip runs the paragraph
+        vim.api.nvim_create_autocmd("LspAttach", {
+          group = vim.api.nvim_create_augroup("sqls_keys", { clear = true }),
+          callback = function(ev)
+            local client = vim.lsp.get_client_by_id(ev.data.client_id)
+            if client and client.name == "sqls" then
+              local function map(lhs, rhs, desc)
+                vim.keymap.set({ "n", "x" }, lhs, rhs, { buffer = ev.buf, desc = desc })
+              end
+              map("glq", "<Plug>(sqls-execute-query)", "Execute query")
+              map("glQ", "<Plug>(sqls-execute-query-vertical)", "Execute query, vertical")
+            end
+          end,
         })
       end
 
