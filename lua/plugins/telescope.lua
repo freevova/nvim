@@ -2,16 +2,48 @@ return {
   --  highly extendable fuzzy finder over lists
   {
     "nvim-telescope/telescope.nvim",
+    cmd = "Telescope",
+    -- these live in the which-key "search" group (<leader>s, see plugins/editor.lua)
+    keys = {
+      {
+        "<leader>sf",
+        function()
+          require("telescope.builtin").find_files()
+        end,
+        desc = "Find files",
+      },
+      {
+        "<leader>sg",
+        function()
+          require("telescope.builtin").live_grep()
+        end,
+        desc = "Live grep",
+      },
+      {
+        "<leader>sb",
+        function()
+          require("telescope.builtin").buffers()
+        end,
+        desc = "Buffers",
+      },
+      {
+        "<leader>sh",
+        function()
+          require("telescope.builtin").help_tags()
+        end,
+        desc = "Help tags",
+      },
+      {
+        "<leader>ss",
+        function()
+          require("telescope.builtin").lsp_document_symbols()
+        end,
+        desc = "Document symbols",
+      },
+    },
     config = function()
       local telescope = require("telescope")
       local actions = require("telescope.actions")
-
-      local builtin = require("telescope.builtin")
-      -- these live in the which-key "search" group (<leader>s, see plugins/editor.lua)
-      vim.keymap.set("n", "<leader>sf", builtin.find_files, { desc = "Find files" })
-      vim.keymap.set("n", "<leader>sb", builtin.buffers, { desc = "Buffers" })
-      vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "Help tags" })
-      vim.keymap.set("n", "<leader>ss", builtin.lsp_document_symbols, { desc = "Document symbols" })
 
       telescope.setup({
         pickers = {
@@ -51,18 +83,13 @@ return {
           },
         },
       })
+
+      telescope.load_extension("fzf")
     end,
     dependencies = {
       "nvim-lua/plenary.nvim",
+      -- fzf sorter compiled with make; loaded together with telescope
+      { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
     },
-  },
-
-  -- a plugin for fzf algorithm
-  {
-    "nvim-telescope/telescope-fzf-native.nvim",
-    build = "make",
-    config = function()
-      require("telescope").load_extension("fzf")
-    end,
   },
 }

@@ -226,6 +226,8 @@ return {
   -- they can update imports (typescript-language-server, lua-language-server)
   {
     "antosha417/nvim-lsp-file-operations",
+    -- loaded by nvim-lspconfig via require, nothing else needs it earlier
+    lazy = true,
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-neo-tree/neo-tree.nvim", -- makes sure that this loads after Neo-tree.
@@ -236,6 +238,7 @@ return {
   },
   {
     "s1n7ax/nvim-window-picker",
+    lazy = true, -- required by neo-tree commands on demand
     version = "2.*",
     config = function()
       require("window-picker").setup({

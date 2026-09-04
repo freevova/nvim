@@ -2,6 +2,7 @@ return {
   -- send commands to tmux pane
   {
     "jgdavey/tslime.vim",
+    lazy = true,
     init = function()
       vim.g.tslime_always_current_session = 1 -- run in current session
     end,
@@ -11,12 +12,14 @@ return {
   {
     "vim-test/vim-test",
     dependencies = { "jgdavey/tslime.vim" },
-    config = function()
-      vim.cmd("let test#strategy = 'tslime'")
-
-      vim.keymap.set("n", "<leader>tn", ":TestNearest<CR>", { desc = "Test nearest" })
-      vim.keymap.set("n", "<leader>tf", ":TestFile<CR>", { desc = "Test file" })
-      vim.keymap.set("n", "<leader>tl", ":TestLast<CR>", { desc = "Test last" })
+    cmd = { "TestNearest", "TestFile", "TestLast", "TestSuite" },
+    keys = {
+      { "<leader>tn", "<cmd>TestNearest<cr>", desc = "Test nearest" },
+      { "<leader>tf", "<cmd>TestFile<cr>", desc = "Test file" },
+      { "<leader>tl", "<cmd>TestLast<cr>", desc = "Test last" },
+    },
+    init = function()
+      vim.g["test#strategy"] = "tslime"
     end,
   },
 }

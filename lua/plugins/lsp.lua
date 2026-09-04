@@ -5,6 +5,7 @@ return {
   -- collection of common configurations for built-in language server client
   {
     "neovim/nvim-lspconfig",
+    event = { "BufReadPre", "BufNewFile" },
     config = function()
       local icons = require("config.icons")
 
@@ -222,6 +223,7 @@ return {
   -- show signature from LSP when apply a function
   {
     "ray-x/lsp_signature.nvim",
+    event = "LspAttach",
     config = function()
       require("lsp_signature").setup({
         hint_prefix = " ",
@@ -231,11 +233,12 @@ return {
   },
 
   -- notifications and LSP progress messages
-  { "j-hui/fidget.nvim", config = true },
+  { "j-hui/fidget.nvim", event = "LspAttach", config = true },
 
   -- completion engine
   {
     "saghen/blink.cmp",
+    event = { "InsertEnter", "CmdlineEnter" },
     dependencies = { "rafamadriz/friendly-snippets", "onsails/lspkind-nvim" },
     version = "1.*",
     opts = {
@@ -314,5 +317,5 @@ return {
   },
 
   -- better design for quick-fix window, it is used in easygrep, vim-fugitive, etc
-  "kevinhwang91/nvim-bqf",
+  { "kevinhwang91/nvim-bqf", ft = "qf" },
 }

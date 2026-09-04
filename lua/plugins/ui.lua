@@ -20,6 +20,7 @@ return {
   -- plugin for automatically highlighting other uses of the word under the cursor
   {
     "RRethy/vim-illuminate",
+    event = { "BufReadPost", "BufNewFile" },
     config = function()
       require("illuminate").configure({
         providers = {
@@ -35,6 +36,7 @@ return {
   -- smoothie scrolling tool
   {
     "karb94/neoscroll.nvim",
+    event = { "BufReadPost", "BufNewFile" },
     config = function()
       require("neoscroll").setup({
         mappings = { "<C-u>", "<C-d>", "<C-y>", "<C-e>", "zt", "zz", "zb" },
@@ -218,6 +220,7 @@ return {
   -- indent guides
   {
     "lukas-reineke/indent-blankline.nvim",
+    event = { "BufReadPost", "BufNewFile" },
     config = function()
       require("ibl").setup({
         whitespace = { remove_blankline_trail = true },

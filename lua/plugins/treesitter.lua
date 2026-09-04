@@ -3,6 +3,7 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     branch = "main",
+    event = { "BufReadPre", "BufNewFile" },
     version = false, -- last release is way too old and doesn't work on Windows
     -- lazy = false,
     build = ":TSUpdate",
@@ -56,6 +57,7 @@ return {
   {
     "nvim-treesitter/nvim-treesitter-textobjects",
     branch = "main",
+    event = { "BufReadPre", "BufNewFile" },
     config = function()
       local select = require("nvim-treesitter-textobjects.select")
       local move = require("nvim-treesitter-textobjects.move")
@@ -135,6 +137,7 @@ return {
   -- provides alternating syntax highlighting (“rainbow parentheses”) for Neovim
   { 
     "HiPhish/rainbow-delimiters.nvim",
+    event = { "BufReadPost", "BufNewFile" },
     dependencies = { "nvim-treesitter/nvim-treesitter" } 
   },
 }
