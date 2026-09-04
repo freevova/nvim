@@ -42,7 +42,10 @@ return {
             prepend_args = { "--indent-type", "Spaces", "--indent-width", "2" },
           },
           mix = {
-            cwd = require("conform.util").root_file({ ".formatter.exs", "mix.exs" }),
+            -- mix.lock exists only at the project/umbrella root; running from a
+            -- nested .formatter.exs or umbrella app dir breaks import_deps and
+            -- skips the root formatter config
+            cwd = require("conform.util").root_file({ "mix.lock" }),
             require_cwd = true,
           },
         },

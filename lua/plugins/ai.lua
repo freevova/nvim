@@ -26,8 +26,25 @@ return {
       terminal = {
         snacks_win_opts = {
           keys = {
-            -- Override snacks' built-in term_normal to hide instead of double-escape
-            term_normal = { "<Esc>", function(self) self:hide() end, mode = "t", desc = "Hide" },
+            -- Single <Esc> is passed through to Claude, double <Esc> hides the window
+            term_normal = {
+              "<Esc>",
+              function(self)
+                self.esc_timer = self.esc_timer or (vim.uv or vim.loop).new_timer()
+                if self.esc_timer:is_active() then
+                  self.esc_timer:stop()
+                  vim.schedule(function()
+                    self:hide()
+                  end)
+                else
+                  self.esc_timer:start(200, 0, function() end)
+                  return "<Esc>"
+                end
+              end,
+              mode = "t",
+              expr = true,
+              desc = "Double escape to hide",
+            },
           },
         },
       },

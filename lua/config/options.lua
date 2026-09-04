@@ -66,7 +66,10 @@ opt.guicursor =
   "n-v-c-sm:block-blinkwait50-blinkon50-blinkoff50,i-ci-ve:ver25-Cursor-blinkon100-blinkoff100,r-cr-o:hor20" -- sets blinking guicursor
 opt.foldmethod = "expr" -- use expression for folding
 opt.foldexpr = "v:lua.vim.treesitter.foldexpr()" -- gives the fold level of a line.
-opt.foldenable = false -- Disable folding at startup.
+opt.foldenable = true
+opt.foldlevel = 99 -- all folds open, so `za` only touches the block under the cursor
+opt.foldlevelstart = 99
+opt.foldtext = "" -- folded line keeps treesitter highlighting
 opt.wildmode = "longest:full,full" -- Command-line completion mode
 opt.winminwidth = 5 -- Minimum window width
 

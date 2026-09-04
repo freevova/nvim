@@ -74,16 +74,89 @@ return {
     opts = {
       sources = { "filesystem", "buffers", "git_status", "document_symbols" },
       open_files_do_not_replace_types = { "terminal", "Trouble", "trouble", "qf", "Outline" },
+      -- Глобальні команди — доступні в усіх джерелах (filesystem/buffers/git_status)
+      commands = {
+        mix_test = function(state)
+          local path = state.tree:get_node():get_id()
+          local root = vim.fs.root(path, { "mix.exs" })
+          if not root then
+            vim.notify("mix.exs не знайдено для " .. path, vim.log.levels.WARN)
+            return
+          end
+          vim.cmd("botright new")
+          vim.fn.jobstart({ "mix", "test", vim.fs.relpath(root, path) or path }, {
+            term = true,
+            cwd = root,
+          })
+          vim.cmd("startinsert")
+        end,
+      },
+      -- Групування супутніх файлів під батьківським. Розгортається на <Tab>
+      -- (бо дефолтний <space> у нас вимкнений нижче).
+      -- Увага: працює лише між файлами в одній директорії.
+      nesting_rules = {
+        ["mix"] = {
+          pattern = "^mix%.exs$",
+          files = { "mix.lock" },
+        },
+        ["elixir"] = {
+          pattern = "(.+)%.ex$",
+          files = { "%1.html.heex" },
+        },
+        ["package.json"] = {
+          pattern = "^package%.json$",
+          files = { "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb" },
+        },
+        ["docker"] = {
+          pattern = "^dockerfile$",
+          ignore_case = true,
+          files = { ".dockerignore", "docker-compose.*", "dockerfile*" },
+        },
+        ["js"] = {
+          pattern = "(.+)%.js$",
+          files = { "%1.js.map", "%1.min.js", "%1.d.ts" },
+        },
+        ["ts"] = {
+          pattern = "(.+)%.ts$",
+          files = { "%1.js", "%1.js.map" },
+        },
+      },
       filesystem = {
         bind_to_cwd = false,
         follow_current_file = { enabled = true },
         use_libuv_file_watcher = true,
+        -- пошук по всьому шляху, пробіл = ".*": `live dash` знайде
+        -- lib/app_web/live/dashboard_live.ex
+        find_by_full_path_words = true,
+        -- УВАГА: тут Lua-патерни, не глоби (utils/init.lua:591 → string.find)
+        filtered_items = {
+          always_show_by_pattern = { "^%.env" }, -- .env, .env.local — видно попри hide_dotfiles
+          never_show_by_pattern = { "%.beam$" }, -- не видно навіть під `H`
+        },
+        -- fd не заходить у ці директорії під час fuzzy-пошуку (`F` / `D` / `#`)
+        find_args = {
+          fd = {
+            "--exclude", ".git",
+            "--exclude", "_build",
+            "--exclude", "deps",
+            "--exclude", "node_modules",
+            "--exclude", ".elixir_ls",
+            "--exclude", ".lexical",
+          },
+        },
       },
       window = {
         mappings = {
           ["l"] = "open_with_window_picker",
           ["h"] = "close_node",
           ["<space>"] = "none",
+          -- дефолтний toggle_node сидить на <space>, який вимкнений вище —
+          -- потрібен, щоб розгортати вкладені файли (nesting_rules)
+          ["<Tab>"] = "toggle_node",
+          -- `/` віддаємо нативному пошуку Vim (працюють n / N),
+          -- fuzzy-фільтр переїжджає на `F`
+          ["/"] = "none",
+          ["F"] = "fuzzy_finder",
           ["S"] = "split_with_window_picker",
           ["s"] = "vsplit_with_window_picker",
           ["w"] = "open_with_window_picker",
@@ -102,6 +175,7 @@ return {
             desc = "Open with System Application",
           },
           ["P"] = { "toggle_preview", config = { use_float = false } },
+          ["T"] = { "mix_test", desc = "mix test on node" },
         },
       },
       default_component_configs = {

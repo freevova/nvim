@@ -7,11 +7,6 @@ return {
     -- lazy = false,
     build = ":TSUpdate",
     opts = {
-      highlight = {
-        enable = true,
-        use_languagetree = true,
-      },
-      indent = { enable = true },
       ensure_installed = {
         "bash",
         "css",
@@ -41,10 +36,19 @@ return {
       },
     },
     config = function(_, opts)
-      require("nvim-treesitter").setup(opts)
+      -- `main` has no modules: parsers are installed explicitly (no-op when
+      -- present) and highlighting/indentation are enabled per buffer. pcall
+      -- skips filetypes without a parser; treesitter indent is used only where
+      -- an indents query ships, otherwise the legacy indent script stays.
+      require("nvim-treesitter").install(opts.ensure_installed)
       vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "elixir" },
-        callback = function() vim.treesitter.start() end,
+        callback = function(ev)
+          if not pcall(vim.treesitter.start, ev.buf) then return end
+          local lang = vim.treesitter.language.get_lang(ev.match)
+          if lang and vim.treesitter.query.get(lang, "indents") then
+            vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          end
+        end,
       })
 
       -- Incremental selection using treesitter nodes (vim.treesitter core API)

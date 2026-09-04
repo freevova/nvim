@@ -85,6 +85,9 @@ return {
 
           Visual = { bg = palettes.nightfox.bg5 },
 
+          -- full-width band behind Elixir @doc/@moduledoc blocks (config/elixir_doc_blocks.lua)
+          ElixirDocBlock = { bg = palettes.nightfox.bg0 },
+
           -- make IlluminatedWord* the same as CursorLine, so it doesn't blink during writing
           IlluminatedWordText = { link = "CursorLine" },
           IlluminatedWordRead = { link = "CursorLine" },
