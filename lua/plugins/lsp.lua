@@ -130,7 +130,6 @@ return {
             end,
           })
         end, "Peek definition")
-        bufmap("n", "glx", vim.lsp.codelens.run, "Run codelens")
         bufmap("n", "gle", vim.diagnostic.open_float, "Line diagnostics")
         bufmap("n", "gls", vim.lsp.buf.signature_help, "Signature help")
         bufmap("n", "glp", ":ElixirToPipe<CR>", "To pipe")

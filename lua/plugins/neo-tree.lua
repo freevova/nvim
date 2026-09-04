@@ -11,7 +11,7 @@ return {
     lazy = false,
     keys = {
       {
-        "<leader>fe",
+        "<leader>e",
         function()
           local root = vim.fs.root(0, { ".git", "Makefile", "mix.exs", "package.json" })
           require("neo-tree.command").execute({ toggle = true, dir = root or vim.uv.cwd() })
@@ -19,14 +19,12 @@ return {
         desc = "Explorer NeoTree (Root Dir)",
       },
       {
-        "<leader>fE",
+        "<leader>E",
         function()
           require("neo-tree.command").execute({ toggle = true, dir = vim.uv.cwd() })
         end,
         desc = "Explorer NeoTree (cwd)",
       },
-      { "<leader>e", "<leader>fe", desc = "Explorer NeoTree (Root Dir)", remap = true },
-      { "<leader>E", "<leader>fE", desc = "Explorer NeoTree (cwd)", remap = true },
       {
         "<leader>ge",
         function()

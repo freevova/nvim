@@ -50,49 +50,6 @@ return {
           end
         end,
       })
-
-      -- Incremental selection using treesitter nodes (vim.treesitter core API)
-      local node_at_cursor = nil
-      local function get_node_range(node)
-        local sr, sc, er, ec = node:range()
-        return sr, sc, er, ec
-      end
-
-      local function select_node(node)
-        if not node then return end
-        local sr, sc, er, ec = get_node_range(node)
-        vim.api.nvim_buf_set_mark(0, "<", sr + 1, sc, {})
-        vim.api.nvim_buf_set_mark(0, ">", er + 1, ec - 1, {})
-        vim.cmd("normal! gv")
-      end
-
-      vim.keymap.set("n", "<C-space>", function()
-        local node = vim.treesitter.get_node()
-        if node then
-          node_at_cursor = node
-          select_node(node)
-        end
-      end, { desc = "Init treesitter selection" })
-
-      vim.keymap.set("v", "<C-space>", function()
-        if node_at_cursor then
-          local parent = node_at_cursor:parent()
-          if parent then
-            node_at_cursor = parent
-            select_node(parent)
-          end
-        end
-      end, { desc = "Expand to parent node" })
-
-      vim.keymap.set("v", "<BS>", function()
-        if node_at_cursor then
-          local child = node_at_cursor:child(0)
-          if child then
-            node_at_cursor = child
-            select_node(child)
-          end
-        end
-      end, { desc = "Shrink to child node" })
     end
   },
   -- syntax aware text-objects, select, move, swap, and peek support.
