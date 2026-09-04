@@ -1,24 +1,4 @@
 return {
-  -- {
-  --   "zbirenbaum/copilot.lua",
-  --   cmd = "Copilot",
-  --   event = "InsertEnter",
-  --   config = function()
-  --     require("copilot").setup({
-  --       suggestion = { enabled = false },
-  --       panel = { enabled = false },
-  --       copilot_node_command = '/Users/vova/.local/share/mise/installs/node/23.11.0/bin/node', -- Node.js version must be > 22
-  --     })
-  --   end,
-  -- },
-  -- {
-  --   "zbirenbaum/copilot-cmp",
-  --   dependencies = { "zbirenbaum/copilot.lua" },
-  --   config = function()
-  --     require("copilot_cmp").setup()
-  --   end,
-  -- },
-
   {
     "coder/claudecode.nvim",
     dependencies = { "folke/snacks.nvim" },
@@ -50,7 +30,6 @@ return {
       },
     },
     keys = {
-      { "<leader>a", "", desc = "+ai", mode = { "n", "v" } },
       { "<leader>ac", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude" },
       { "<leader>af", "<cmd>ClaudeCodeFocus<cr>", desc = "Focus Claude" },
       { "<C-,>", "<cmd>ClaudeCodeFocus<cr>", desc = "Claude Code", mode = { "n", "x" } },

@@ -111,35 +111,47 @@ return {
 
       -- Select textobjects
       local select_maps = {
-        ["af"] = "@function.outer",
-        ["if"] = "@function.inner",
-        ["ac"] = "@class.outer",
-        ["ic"] = "@class.inner",
+        { "af", "@function.outer", "Select outer function" },
+        { "if", "@function.inner", "Select inner function" },
+        { "ac", "@class.outer", "Select outer class" },
+        { "ic", "@class.inner", "Select inner class" },
       }
-      for key, query in pairs(select_maps) do
+      for _, m in ipairs(select_maps) do
+        local key, query, desc = unpack(m)
         vim.keymap.set({ "x", "o" }, key, function()
           select.select_textobject(query)
-        end)
+        end, { desc = desc })
       end
 
       -- Move: goto next/previous start/end
       local move_maps = {
-        goto_next_start = { ["]f"] = "@function.outer", ["]c"] = "@class.outer", ["]a"] = "@parameter.inner" },
-        goto_next_end = { ["]F"] = "@function.outer", ["]C"] = "@class.outer", ["]A"] = "@parameter.inner" },
-        goto_previous_start = { ["[f"] = "@function.outer", ["[c"] = "@class.outer", ["[a"] = "@parameter.inner" },
-        goto_previous_end = { ["[F"] = "@function.outer", ["[C"] = "@class.outer", ["[A"] = "@parameter.inner" },
+        { "goto_next_start", "]f", "@function.outer", "Next function start" },
+        { "goto_next_start", "]c", "@class.outer", "Next class start" },
+        { "goto_next_start", "]a", "@parameter.inner", "Next parameter start" },
+        { "goto_next_end", "]F", "@function.outer", "Next function end" },
+        { "goto_next_end", "]C", "@class.outer", "Next class end" },
+        { "goto_next_end", "]A", "@parameter.inner", "Next parameter end" },
+        { "goto_previous_start", "[f", "@function.outer", "Prev function start" },
+        { "goto_previous_start", "[c", "@class.outer", "Prev class start" },
+        { "goto_previous_start", "[a", "@parameter.inner", "Prev parameter start" },
+        { "goto_previous_end", "[F", "@function.outer", "Prev function end" },
+        { "goto_previous_end", "[C", "@class.outer", "Prev class end" },
+        { "goto_previous_end", "[A", "@parameter.inner", "Prev parameter end" },
       }
-      for fn_name, mappings in pairs(move_maps) do
-        for key, query in pairs(mappings) do
-          vim.keymap.set({ "n", "x", "o" }, key, function()
-            move[fn_name](query)
-          end)
-        end
+      for _, m in ipairs(move_maps) do
+        local fn_name, key, query, desc = unpack(m)
+        vim.keymap.set({ "n", "x", "o" }, key, function()
+          move[fn_name](query)
+        end, { desc = desc })
       end
 
       -- Swap
-      vim.keymap.set("n", "<leader>xp", function() swap.swap_next("@parameter.inner") end)
-      vim.keymap.set("n", "<leader>xP", function() swap.swap_previous("@parameter.inner") end)
+      vim.keymap.set("n", "<leader>cn", function()
+        swap.swap_next("@parameter.inner")
+      end, { desc = "Swap parameter with next" })
+      vim.keymap.set("n", "<leader>cN", function()
+        swap.swap_previous("@parameter.inner")
+      end, { desc = "Swap parameter with previous" })
     end,
   },
 

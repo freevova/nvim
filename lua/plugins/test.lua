@@ -14,9 +14,9 @@ return {
     config = function()
       vim.cmd("let test#strategy = 'tslime'")
 
-      vim.api.nvim_set_keymap("n", "<space>tn", ":TestNearest<CR>", { noremap = false })
-      vim.api.nvim_set_keymap("n", "<space>tf", ":TestFile<CR>", { noremap = false })
-      vim.api.nvim_set_keymap("n", "<space>tl", ":TestLast<CR>", { noremap = false })
+      vim.keymap.set("n", "<space>tn", ":TestNearest<CR>", { desc = "Test nearest" })
+      vim.keymap.set("n", "<space>tf", ":TestFile<CR>", { desc = "Test file" })
+      vim.keymap.set("n", "<space>tl", ":TestLast<CR>", { desc = "Test last" })
     end,
   },
 }

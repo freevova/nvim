@@ -105,6 +105,13 @@ return {
           -- highlight group that is used by vim-current-search-match plugin by default
           PmenuSel = { fg = palettes.nightfox.bg2, bg = palettes.nightfox.orange },
 
+          -- neo-tree input popup (add/rename): body lighter than the tree so the
+          -- window stands out, title as light text on a dark bar instead of the
+          -- default inverted beige bar
+          NeoTreeFloatNormal = { fg = palettes.nightfox.fg1, bg = palettes.nightfox.bg3 },
+          NeoTreeFloatBorder = { fg = palettes.nightfox.fg3, bg = palettes.nightfox.bg3 },
+          NeoTreeTitleBar = { fg = palettes.nightfox.fg1, bg = palettes.nightfox.bg4, style = "bold" },
+
           WinSeparator = { link = "Comment" },
           Search = { fg = palettes.nightfox.orange, bg = palettes.nightfox.bg4, style = "bold" },
           IncSearch = { link = "Search" },

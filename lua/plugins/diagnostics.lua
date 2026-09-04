@@ -1,28 +1,4 @@
 return {
-  -- search/replace in multiple files
-  {
-    "MagicDuck/grug-far.nvim",
-    opts = { headerMaxWidth = 80 },
-    cmd = { "GrugFar", "GrugFarWithin" },
-    keys = {
-      {
-        "<leader>sr",
-        function()
-          local grug = require("grug-far")
-          local ext = vim.bo.buftype == "" and vim.fn.expand("%:e")
-          grug.open({
-            transient = true,
-            prefills = {
-              filesFilter = ext and ext ~= "" and "*." .. ext or nil,
-            },
-          })
-        end,
-        mode = { "n", "x" },
-        desc = "Search and Replace",
-      },
-    },
-  },
-
   -- better diagnostics list and others
   {
     "folke/trouble.nvim",
@@ -40,8 +16,8 @@ return {
     keys = {
       { "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics (Trouble)" },
       { "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", desc = "Buffer Diagnostics (Trouble)" },
-      { "<leader>cs", "<cmd>Trouble symbols toggle<cr>", desc = "Symbols (Trouble)" },
-      { "<leader>cS", "<cmd>Trouble lsp toggle<cr>", desc = "LSP references/definitions/... (Trouble)" },
+      { "gs", "<cmd>Trouble symbols toggle<cr>", desc = "Symbols (Trouble)" },
+      { "gS", "<cmd>Trouble lsp toggle<cr>", desc = "LSP references/definitions/... (Trouble)" },
       { "<leader>xL", "<cmd>Trouble loclist toggle<cr>", desc = "Location List (Trouble)" },
       { "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List (Trouble)" },
       {
@@ -75,18 +51,6 @@ return {
     },
   },
 
-  {
-    "hedyhli/outline.nvim",
-    lazy = true,
-    cmd = { "Outline", "OutlineOpen" },
-    keys = { -- Example mapping to toggle outline
-      { "<leader>co", "<cmd>Outline<CR>", desc = "Toggle outline" },
-    },
-    opts = {
-      -- Your setup opts here
-    },
-  },
-
   -- Finds and lists all of the TODO, HACK, BUG, etc comment
   -- in your project and loads them into a browsable list.
   {
@@ -103,5 +67,33 @@ return {
       { "<leader>st", "<cmd>TodoTelescope<cr>", desc = "Todo" },
       { "<leader>sT", "<cmd>TodoTelescope keywords=TODO,FIX,FIXME<cr>", desc = "Todo/Fix/Fixme" },
     },
+  },
+
+  -- runs external linters and shows their output as diagnostics
+  {
+    "mfussenegger/nvim-lint",
+    event = { "BufReadPost", "BufNewFile" },
+    config = function()
+      local lint = require("lint")
+
+      lint.linters_by_ft = {
+        elixir = { "credo" },
+      }
+
+      -- credo boots a BEAM per run, so no InsertLeave; it runs from the
+      -- directory holding .credo.exs and is skipped where there is none
+      vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost" }, {
+        group = vim.api.nvim_create_augroup("nvim_lint", { clear = true }),
+        callback = function(ev)
+          local credo_root = vim.fs.root(ev.buf, ".credo.exs")
+          lint.try_lint(nil, {
+            cwd = credo_root,
+            filter = function(linter)
+              return linter.name ~= "credo" or credo_root ~= nil
+            end,
+          })
+        end,
+      })
+    end,
   },
 }

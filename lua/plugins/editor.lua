@@ -1,6 +1,78 @@
 return {
+  -- search/replace in multiple files
+  {
+    "MagicDuck/grug-far.nvim",
+    opts = { headerMaxWidth = 80 },
+    cmd = { "GrugFar", "GrugFarWithin" },
+    keys = {
+      {
+        "<leader>sr",
+        function()
+          local grug = require("grug-far")
+          local ext = vim.bo.buftype == "" and vim.fn.expand("%:e")
+          grug.open({
+            transient = true,
+            prefills = {
+              filesFilter = ext and ext ~= "" and "*." .. ext or nil,
+            },
+          })
+        end,
+        mode = { "n", "x" },
+        desc = "Search and Replace",
+      },
+    },
+  },
+
+  -- Flash enhances the built-in search functionality by showing labels
+  -- at the end of each match, letting you quickly jump to a specific
+  -- location.
+  {
+    "folke/flash.nvim",
+    vscode = true,
+    ---@type Flash.Config
+    opts = {},
+    -- stylua: ignore
+    keys = {
+      { "g/", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
+      { "S", mode = { "n", "o", "x" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
+      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+      { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+      -- Simulate nvim-treesitter incremental selection
+      { "<c-space>", mode = { "n", "o", "x" },
+        function()
+          require("flash").treesitter({
+            actions = {
+              ["<c-space>"] = "next",
+              ["<BS>"] = "prev"
+            }
+          }) 
+        end, desc = "Treesitter Incremental Selection" },
+    },
+  },
+
   -- for manipulation with parentheses, brackets, quotes
-  "tpope/vim-surround",
+  {
+    "tpope/vim-surround",
+    init = function()
+      -- defaults (ys/cs/ds) start with builtin operators, so which-key cannot
+      -- show them; everything lives under <leader>c instead
+      vim.g.surround_no_mappings = 1
+    end,
+    keys = {
+      { "<leader>ca", "<Plug>Ysurround", desc = "Add surrounding" },
+      { "<leader>cA", "<Plug>YSurround", desc = "Add surrounding, on new lines" },
+      { "<leader>cl", "<Plug>Yssurround", desc = "Surround line" },
+      { "<leader>cL", "<Plug>YSsurround", desc = "Surround line, on new lines" },
+      { "<leader>cd", "<Plug>Dsurround", desc = "Delete surrounding" },
+      { "<leader>cr", "<Plug>Csurround", desc = "Replace surrounding" },
+      { "<leader>cR", "<Plug>CSurround", desc = "Replace surrounding, on new lines" },
+      { "<leader>ca", "<Plug>VSurround", mode = "x", desc = "Surround selection" },
+      { "<leader>cA", "<Plug>VgSurround", mode = "x", desc = "Surround selection, on new lines" },
+      { "<C-g>s", "<Plug>Isurround", mode = "i", desc = "Add surrounding" },
+      { "<C-g>S", "<Plug>ISurround", mode = "i", desc = "Add surrounding, on new lines" },
+    },
+  },
 
   -- ability to edit with multiple cursors
   "mg979/vim-visual-multi",
@@ -24,18 +96,18 @@ return {
       npairs.setup({
         check_ts = true,
         ts_config = {
-          lua = { "string" }, -- it will not add a pair on that treesitter node
-          javascript = { "template_string" },
-          java = false, -- don't check treesitter on java
+          -- the check only looks at the node under the cursor, so leaf types:
+          -- quoted_content covers strings, heredocs, charlists and sigils
+          elixir = { "quoted_content", "comment" },
         },
       })
-      local ts_conds = require("nvim-autopairs.ts-conds")
 
-      -- press % => %% only while inside a comment or string
       npairs.add_rules({
-        Rule("%", "%", "lua"):with_pair(ts_conds.is_ts_node({ "string", "comment" })),
-        Rule("$", "$", "lua"):with_pair(ts_conds.is_not_ts_node({ "function" })),
+        -- plain `{` is suppressed inside strings by the rule above
+        Rule("#{", "}", "elixir"),
       })
+      -- `end` after Enter on a line ending with do, fn or fn ... ->
+      npairs.add_rules(require("nvim-autopairs.rules.endwise-elixir"))
     end,
   },
 
@@ -49,25 +121,24 @@ return {
     opts_extend = { "spec" },
     opts = {
       preset = "helix",
-      defaults = {},
       spec = {
         {
           mode = { "n", "x" },
-          { "<leader><tab>", group = "tabs" },
-          { "<leader>c", group = "code" },
-          { "<leader>d", group = "debug" },
-          { "<leader>dp", group = "profiler" },
+          { "<leader>a", group = "ai" },
+          { "<leader>c", group = "change" },
           { "<leader>f", group = "file/find" },
           { "<leader>g", group = "git" },
-          { "<leader>gh", group = "hunks" },
-          { "<leader>q", group = "quit/session" },
+          { "<leader>gc", group = "conflict" },
           { "<leader>s", group = "search" },
           { "<leader>u", group = "ui" },
           { "<leader>x", group = "diagnostics/quickfix" },
+          -- vim-test lives on <space>, separate from <leader>
+          { "<space>t", group = "test" },
           { "[", group = "prev" },
           { "]", group = "next" },
           { "g", group = "goto" },
-          { "gs", group = "surround" },
+          { "gl", group = "lsp" },
+          { "glw", group = "workspace" },
           { "z", group = "fold" },
           {
             "<leader>b",
@@ -87,6 +158,11 @@ return {
           -- better descriptions
           { "gx", desc = "Open with system app" },
         },
+        {
+          -- Neovim default, normal mode only
+          mode = "n",
+          { "gO", desc = "Document symbols" },
+        },
       },
     },
     keys = {
@@ -105,14 +181,6 @@ return {
         desc = "Window Hydra Mode (which-key)",
       },
     },
-    -- config = function(_, opts)
-    --   local wk = require("which-key")
-    --   wk.setup(opts)
-    --   if not vim.tbl_isempty(opts.defaults) then
-    --     LazyVim.warn("which-key: opts.defaults is deprecated. Please use opts.spec instead.")
-    --     wk.register(opts.defaults)
-    --   end
-    -- end,
   },
 
   -- better yank/paste
@@ -174,5 +242,26 @@ return {
       vim.api.nvim_set_keymap("", "e", "<Plug>CamelCaseMotion_e", {})
       vim.api.nvim_set_keymap("", "ge", "<Plug>CamelCaseMotion_ge", {})
     end,
+  },
+
+  -- plugin to place, toggle and display marks
+  { "chentoast/marks.nvim", config = true },
+
+  -- allows to navigate seamlessly between vim and tmux splits using a consistent set of hotkeys.
+  {
+    "christoomey/vim-tmux-navigator",
+    event = "VeryLazy",
+  },
+
+  {
+    "hedyhli/outline.nvim",
+    lazy = true,
+    cmd = { "Outline", "OutlineOpen" },
+    keys = {
+      { "go", "<cmd>Outline<CR>", desc = "Toggle outline" },
+    },
+    opts = {
+      -- Your setup opts here
+    },
   },
 }

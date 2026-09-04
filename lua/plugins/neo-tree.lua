@@ -76,6 +76,14 @@ return {
       open_files_do_not_replace_types = { "terminal", "Trouble", "trouble", "qf", "Outline" },
       -- Глобальні команди — доступні в усіх джерелах (filesystem/buffers/git_status)
       commands = {
+        -- moves to the parent directory without collapsing it (h collapses)
+        goto_parent = function(state)
+          local node = state.tree:get_node()
+          local parent_id = node and node:get_parent_id()
+          if parent_id then
+            require("neo-tree.ui.renderer").focus_node(state, parent_id)
+          end
+        end,
         mix_test = function(state)
           local path = state.tree:get_node():get_id()
           local root = vim.fs.root(path, { "mix.exs" })
@@ -149,6 +157,7 @@ return {
         mappings = {
           ["l"] = "open_with_window_picker",
           ["h"] = "close_node",
+          ["-"] = { "goto_parent", desc = "Goto parent node" },
           ["<space>"] = "none",
           -- дефолтний toggle_node сидить на <space>, який вимкнений вище —
           -- потрібен, щоб розгортати вкладені файли (nesting_rules)
@@ -215,6 +224,8 @@ return {
       })
     end,
   },
+  -- tells LSP servers about file renames/moves/deletes done in neo-tree so
+  -- they can update imports (typescript-language-server, lua-language-server)
   {
     "antosha417/nvim-lsp-file-operations",
     dependencies = {

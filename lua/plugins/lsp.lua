@@ -129,38 +129,55 @@ return {
         client.server_capabilities.documentHighlightProvider = false
         client.server_capabilities.codeLensProvider = nil
 
-        local bufmap = function(mode, lhs, rhs)
-          local opts = { buffer = true }
-          vim.keymap.set(mode, lhs, rhs, opts)
+        local bufmap = function(mode, lhs, rhs, desc)
+          vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true, desc = desc })
         end
 
-        local bufopts = { noremap = true, silent = true, buffer = bufnr }
-        bufmap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", bufopts)
-        bufmap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", bufopts)
-        bufmap("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", bufopts)
-        bufmap("n", "gi", "<cmd>lua vim.lsp.buf.implementation()<CR>", bufopts)
-        bufmap("n", "gr", "<cmd>lua vim.lsp.buf.references()<CR>", bufopts)
-        bufmap("n", "<space>sh", "<cmd>lua vim.lsp.buf.signature_help()<CR>", bufopts)
-        bufmap("n", "<space>D", "<cmd>lua vim.lsp.buf.type_definition()<CR>", bufopts)
-        bufmap("n", "<space>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", bufopts)
-        bufmap("n", "<space>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", bufopts)
-        bufmap("n", "<space>e", "<cmd>lua vim.diagnostic.open_float()<CR>", bufopts)
-        bufmap("n", "<space>f", function()
-          vim.lsp.buf.format({ async = true })
-        end, bufopts)
-        bufmap("n", "<space>q", "<cmd>lua vim.diagnostic.set_loclist()<CR>", bufopts)
-        bufmap("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<CR>", bufopts)
-        bufmap("n", "]d", "<cmd>lua vim.diagnostic.goto_next()<CR>", bufopts)
+        -- Hover, definition-by-tag, document symbols and diagnostic jumps stay
+        -- on Neovim defaults (K, <C-]>, gO, ]d/[d). Everything else is under
+        -- gl, the which-key "lsp" group; Neovim's gr* defaults are removed
+        -- below so `gr` (replace virtual char) works without a timeout.
+        bufmap("n", "gd", vim.lsp.buf.definition, "Goto definition")
+        bufmap("n", "gD", vim.lsp.buf.declaration, "Goto declaration")
 
-        bufmap("n", "<space>wa", "<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", bufopts)
-        bufmap("n", "<space>wr", "<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", bufopts)
-        bufmap("n", "<space>wl", "<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>", bufopts)
+        bufmap({ "n", "x" }, "gla", vim.lsp.buf.code_action, "Code action")
+        bufmap("n", "gln", vim.lsp.buf.rename, "Rename")
+        bufmap("n", "glr", vim.lsp.buf.references, "References")
+        bufmap("n", "gli", vim.lsp.buf.implementation, "Implementation")
+        bufmap("n", "glt", vim.lsp.buf.type_definition, "Type definition")
+        -- definition(s) into quickfix instead of jumping, so nvim-bqf previews
+        -- the code in a float while the cursor stays here
+        bufmap("n", "gld", function()
+          vim.lsp.buf.definition({
+            on_list = function(list)
+              vim.fn.setqflist({}, " ", list)
+              vim.cmd.copen()
+            end,
+          })
+        end, "Peek definition")
+        bufmap("n", "glx", vim.lsp.codelens.run, "Run codelens")
+        bufmap("n", "gle", vim.diagnostic.open_float, "Line diagnostics")
+        bufmap("n", "gls", vim.lsp.buf.signature_help, "Signature help")
+        bufmap("n", "glp", ":ElixirToPipe<CR>", "To pipe")
+        bufmap("n", "glP", ":ElixirFromPipe<CR>", "From pipe")
 
-        bufmap("n", "<space>tp", ":ElixirToPipe<CR>", bufopts)
-        bufmap("n", "<space>fp", ":ElixirFromPipe<CR>", bufopts)
+        bufmap("n", "glwa", vim.lsp.buf.add_workspace_folder, "Add workspace folder")
+        bufmap("n", "glwr", vim.lsp.buf.remove_workspace_folder, "Remove workspace folder")
+        bufmap("n", "glwl", function()
+          print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+        end, "List workspace folders")
       end
 
-      local capabilities = require("blink.cmp").get_lsp_capabilities()
+      for _, lhs in ipairs({ "grn", "grr", "gri", "grt", "grx" }) do
+        pcall(vim.keymap.del, "n", lhs)
+      end
+      pcall(vim.keymap.del, { "n", "x" }, "gra")
+
+      local capabilities = vim.tbl_deep_extend(
+        "force",
+        require("blink.cmp").get_lsp_capabilities(),
+        require("lsp-file-operations").default_capabilities()
+      )
 
       -- lspconfig.elixirls.setup({
       vim.lsp.config("elixirls", {
@@ -396,4 +413,7 @@ return {
     },
     opts_extend = { "sources.default" },
   },
+
+  -- better design for quick-fix window, it is used in easygrep, vim-fugitive, etc
+  "kevinhwang91/nvim-bqf",
 }

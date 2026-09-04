@@ -1,16 +1,4 @@
 return {
-  -- for manipulation with parentheses, brackets, quotes
-  "tpope/vim-surround",
-  -- ability to edit with multiple cursors
-  "mg979/vim-visual-multi",
-  -- switch between opposite terms
-  {
-    "AndrewRadev/switch.vim",
-    init = function()
-      vim.g.switch_mapping = "-"
-      vim.g.switch_custom_definitions = { { "assert", "refute" }, { "and", "or" }, { "required", "optional" } }
-    end,
-  },
   {
     "stevearc/conform.nvim",
     keys = {

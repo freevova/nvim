@@ -12,9 +12,6 @@ return {
   -- zooming vim window splits
   "dhruvasagar/vim-zoom",
 
-  -- better design for quick-fix window, it is used in easygrep, vim-fugitive, etc
-  "kevinhwang91/nvim-bqf",
-
   -- display colors in file
   "norcalli/nvim-colorizer.lua",
 
@@ -52,8 +49,8 @@ return {
       { "<leader>bP", "<Cmd>BufferLineGroupClose ungrouped<CR>", desc = "Delete Non-Pinned Buffers" },
       { "<leader>br", "<Cmd>BufferLineCloseRight<CR>", desc = "Delete Buffers to the Right" },
       { "<leader>bl", "<Cmd>BufferLineCloseLeft<CR>", desc = "Delete Buffers to the Left" },
-      { "<S-h>", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev Buffer" },
-      { "<S-l>", "<cmd>BufferLineCycleNext<cr>", desc = "Next Buffer" },
+      { "<leader>bN", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev Buffer" },
+      { "<leader>bn", "<cmd>BufferLineCycleNext<cr>", desc = "Next Buffer" },
       { "[b", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev Buffer" },
       { "]b", "<cmd>BufferLineCycleNext<cr>", desc = "Next Buffer" },
       { "[B", "<cmd>BufferLineMovePrev<cr>", desc = "Move buffer prev" },
@@ -187,7 +184,7 @@ return {
     end,
     keys = {
       {
-        "<leader>cp",
+        "<leader>up",
         ft = "markdown",
         "<cmd>MarkdownPreviewToggle<cr>",
         desc = "Markdown Preview",
@@ -198,47 +195,41 @@ return {
     end,
   },
 
-  -- {
-  --   "MeanderingProgrammer/render-markdown.nvim",
-  --   opts = {
-  --     code = {
-  --       sign = false,
-  --       width = "block",
-  --       right_pad = 1,
-  --     },
-  --     heading = {
-  --       sign = false,
-  --       icons = {},
-  --     },
-  --     checkbox = {
-  --       enabled = false,
-  --     },
-  --   },
-  --   ft = { "markdown", "norg", "rmd", "org", "codecompanion" },
-  --   config = function(_, opts)
-  --     require("render-markdown").setup(opts)
-  --     Snacks.toggle({
-  --       name = "Render Markdown",
-  --       get = require("render-markdown").get,
-  --       set = require("render-markdown").set,
-  --     }):map("<leader>um")
-  --   end,
-  -- },
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    opts = {
+      -- no latex parser or latex2text here; keeps :checkhealth clean
+      latex = { enabled = false },
+      completions = { blink = { enabled = true } },
+      code = { sign = false, width = "block", right_pad = 1 },
+      heading = { sign = false, icons = {} },
+      checkbox = { enabled = false },
+    },
+    ft = { "markdown" },
+    config = function(_, opts)
+      require("render-markdown").setup(opts)
+      Snacks.toggle({
+        name = "Render Markdown",
+        get = require("render-markdown").get,
+        set = require("render-markdown").set,
+      }):map("<leader>um")
+    end,
+  },
 
   --  hackable Markdown, HTML, LaTeX, Typst & YAML previewer for Neovim.
-  {
-    "OXY2DEV/markview.nvim",
-    lazy = false,
-
-    -- For `nvim-treesitter` users.
-    priority = 49,
-
-    -- For blink.cmp's completion
-    -- source
-    dependencies = {
-      "saghen/blink.cmp",
-    },
-  },
+  -- {
+  --   "OXY2DEV/markview.nvim",
+  --   lazy = false,
+  --
+  --   -- For `nvim-treesitter` users.
+  --   priority = 49,
+  --
+  --   -- For blink.cmp's completion
+  --   -- source
+  --   dependencies = {
+  --     "saghen/blink.cmp",
+  --   },
+  -- },
 
   -- indent guides
   {
@@ -264,46 +255,6 @@ return {
       })
     end,
   },
-
-  -- -- file explorer
-  -- {
-  --   "nvim-tree/nvim-tree.lua",
-  --   version = "*",
-  --   lazy = false,
-  --   dependencies = { "nvim-tree/nvim-web-devicons" },
-  --   config = function()
-  --     local function on_attach(bufnr)
-  --       local api = require("nvim-tree.api")
-  --
-  --       local function opts(desc)
-  --         return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
-  --       end
-  --       -- default mappings
-  --       api.config.mappings.default_on_attach(bufnr)
-  --
-  --       -- custom mappings
-  --       vim.keymap.set("n", "|", api.node.open.vertical, opts("Open: Vertical Split"))
-  --       vim.keymap.set("n", "_", api.node.open.horizontal, opts("Open: Horizontal Split"))
-  --       vim.keymap.set("n", "?", api.tree.toggle_help, opts("Help"))
-  --
-  --       vim.api.nvim_set_keymap("", "<C-p>", ":NvimTreeToggle<CR>", { noremap = true })
-  --       vim.api.nvim_set_keymap("", "<C-F>", ":NvimTreeFindFile<CR>", { noremap = true })
-  --     end
-  --
-  --     require("nvim-tree").setup({
-  --       on_attach = on_attach,
-  --       view = {
-  --         width = 50,
-  --       },
-  --       renderer = {
-  --         special_files = {}, -- don't highlight readme files
-  --         indent_markers = {
-  --           enable = true,
-  --         },
-  --       },
-  --     })
-  --   end,
-  -- },
 
   {
     "snacks.nvim",

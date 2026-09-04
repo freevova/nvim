@@ -5,7 +5,6 @@ return {
     config = function()
       local telescope = require("telescope")
       local actions = require("telescope.actions")
-      -- local lga_actions = require("telescope-live-grep-args.actions")
 
       local map = function(mode, lhs, rhs)
         local opts = { noremap = true, silent = true }
@@ -25,23 +24,12 @@ return {
         end
       end
 
-      -- map("n", "<leader>ff", "<CMD>lua project_files()<CR>")
-      -- map("n", "<leader>ff", ":Telescope find_files prompt_position=top --no_ignore<CR>")
-      -- map("n", "<leader>fF", ":lua require('telescope.builtin').find_files({prompt_position=top, no_ignore = true})<CR>")
-      -- map("n", "<leader>fg", ":Telescope live_grep_args theme=get_ivy prompt_prefix=🔍<CR>")
-
       local builtin = require("telescope.builtin")
-      vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Telescope find files" })
-      -- vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Telescope live grep' })
-      vim.keymap.set(
-        "n",
-        "<leader>fg",
-        ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>",
-        { desc = "Telescope live grep" }
-      )
-      vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Telescope buffers" })
-      vim.keymap.set("n", "<leader>fh", builtin.help_tags, { desc = "Telescope help tags" })
-      vim.keymap.set("n", "<leader>fs", builtin.lsp_document_symbols, { desc = "Telescope lsp symbols" })
+      -- these live in the which-key "search" group (<leader>s, see plugins/editor.lua)
+      vim.keymap.set("n", "<leader>sf", builtin.find_files, { desc = "Find files" })
+      vim.keymap.set("n", "<leader>sb", builtin.buffers, { desc = "Buffers" })
+      vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "Help tags" })
+      vim.keymap.set("n", "<leader>ss", builtin.lsp_document_symbols, { desc = "Document symbols" })
 
       telescope.setup({
         pickers = {
@@ -51,11 +39,6 @@ return {
                 ["<c-d>"] = actions.delete_buffer + actions.move_to_top,
               },
             },
-          },
-        },
-        extensions = {
-          live_grep_args = {
-            auto_quoting = true, -- enable/disable auto-quoting
           },
         },
         defaults = {
@@ -86,20 +69,11 @@ return {
           },
         },
       })
-
-      telescope.load_extension("live_grep_args")
-      telescope.load_extension("search_dir_picker")
     end,
     dependencies = {
-      "nvim-lua/popup.nvim",
       "nvim-lua/plenary.nvim",
-      "nvim-telescope/telescope-live-grep-args.nvim",
-      "smilovanovic/telescope-search-dir-picker.nvim",
     },
   },
-
-  -- search tool that recursively searches the current directory for a regex pattern
-  "jremmen/vim-ripgrep",
 
   -- a plugin for fzf algorithm
   {
