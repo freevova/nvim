@@ -112,6 +112,12 @@ return {
           NeoTreeFloatBorder = { fg = palettes.nightfox.fg3, bg = palettes.nightfox.bg3 },
           NeoTreeTitleBar = { fg = palettes.nightfox.fg1, bg = palettes.nightfox.bg4, style = "bold" },
 
+          -- indent-blankline v3 groups; nightfox only styles the v2 IndentBlankline* names.
+          -- Scope guide in orange, the other guides recede into bg3
+          IblIndent = { fg = palettes.nightfox.bg3 },
+          IblWhitespace = { link = "IblIndent" },
+          IblScope = { fg = palettes.nightfox.orange },
+
           WinSeparator = { link = "Comment" },
           Search = { fg = palettes.nightfox.orange, bg = palettes.nightfox.bg4, style = "bold" },
           IncSearch = { link = "Search" },

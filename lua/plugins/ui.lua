@@ -221,6 +221,10 @@ return {
       require("ibl").setup({
         whitespace = { remove_blankline_trail = true },
         indent = { char = "┊" },
+        -- current scope: solid bar, underline on its opening and closing keyword.
+        -- Without show_exact_scope the end underline needs the closing line to
+        -- be indented deeper than the guide, which never holds for Lua/Elixir `end`
+        scope = { char = "┃", show_start = true, show_end = true, show_exact_scope = true },
         exclude = {
           filetypes = {
             -- default
