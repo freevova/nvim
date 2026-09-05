@@ -201,6 +201,43 @@ return {
         },
       })
 
+      -- Expert reads HEEx as Elixir text: it completes inside {} and <%= %> but
+      -- knows no tags, attributes or components, so html and emmet cover those.
+      -- Formatting stays with mix format
+      vim.lsp.config("html", {
+        filetypes = { "html", "heex", "eelixir" },
+        init_options = { provideFormatter = false },
+      })
+      vim.lsp.config("emmet_language_server", {
+        filetypes = { "html", "css", "scss", "javascriptreact", "typescriptreact", "heex", "eelixir" },
+        -- emmet only knows its own syntaxes, map the Elixir templates onto html
+        init_options = { includeLanguages = { heex = "html", eelixir = "html" } },
+      })
+      -- lspconfig falls back to .git as the root for Tailwind v4, which would start
+      -- a server in every Elixir project; only projects that pull in tailwind get one
+      vim.lsp.config("tailwindcss", {
+        root_dir = function(bufnr, on_dir)
+          local util = require("lspconfig.util")
+          local fname = vim.api.nvim_buf_get_name(bufnr)
+          local markers = {
+            "tailwind.config.js",
+            "tailwind.config.cjs",
+            "tailwind.config.mjs",
+            "tailwind.config.ts",
+            "postcss.config.js",
+            "postcss.config.cjs",
+            "postcss.config.mjs",
+            "postcss.config.ts",
+          }
+          markers = util.insert_package_json(markers, "tailwindcss", fname)
+          markers = util.root_markers_with_field(markers, { "mix.lock" }, "tailwind", fname)
+          local root = vim.fs.find(markers, { path = fname, upward = true })[1]
+          if root then
+            on_dir(vim.fs.dirname(root))
+          end
+        end,
+      })
+
       -- Elixir install root (has lib/elixir/lib/kernel.ex) derived from the elixir
       -- on PATH: mise builds are compiled on CI, so module sources point to
       -- /home/runner/...; Expert remaps them onto this root for stdlib gd
@@ -265,6 +302,7 @@ return {
       -- elixirls stays configured as a fallback; enable exactly one Elixir server
       vim.lsp.enable("expert")
       vim.lsp.enable("ts_ls")
+      vim.lsp.enable({ "html", "emmet_language_server", "tailwindcss" })
     end,
   },
 
