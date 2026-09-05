@@ -11,16 +11,9 @@ return {
       local icons = require("config.icons")
 
       vim.diagnostic.config({
-        underline = true,
-        update_in_insert = false,
         severity_sort = true,
         virtual_text = false,
-        float = {
-          border = "rounded",
-          source = "always",
-          header = "",
-          prefix = "",
-        },
+        float = { source = true, header = "", prefix = "" },
         signs = {
           text = {
             [vim.diagnostic.severity.ERROR] = icons.diagnostics.Error,
@@ -31,6 +24,25 @@ return {
         },
       })
 
+      -- show the diagnostics of the cursor line in a float once the cursor rests
+      -- (updatetime); no virtual text, so the layout never shifts
+      vim.api.nvim_create_autocmd("CursorHold", {
+        group = vim.api.nvim_create_augroup("diagnostic_float", { clear = true }),
+        callback = function()
+          vim.diagnostic.open_float(nil, { focusable = false, scope = "line" })
+        end,
+      })
+
+      -- applies to every server, including the ones configured by plugins (sqls)
+      vim.lsp.config("*", {
+        capabilities = vim.tbl_deep_extend(
+          "force",
+          require("blink.cmp").get_lsp_capabilities(),
+          require("lsp-file-operations").default_capabilities()
+        ),
+      })
+
+      -- ElixirLS-only commands, driven through workspace/executeCommand
       local manipulate_pipes = function(direction, client)
         local position_params = vim.lsp.util.make_position_params(0, client.offset_encoding)
 
@@ -45,116 +57,112 @@ return {
         }, nil, 0)
       end
 
-      local M = {}
+      local function expand_macro(client)
+        local params = vim.lsp.util.make_given_range_params(nil, nil, 0, client.offset_encoding)
 
-      function M.from_pipe(client)
-        return function()
-          manipulate_pipes("fromPipe", client)
+        local text = vim.api.nvim_buf_get_text(
+          0,
+          params.range.start.line,
+          params.range.start.character,
+          params.range["end"].line,
+          params.range["end"].character,
+          {}
+        )
+
+        local resp = client:request_sync("workspace/executeCommand", {
+          command = "expandMacro:serverid",
+          arguments = { params.textDocument.uri, vim.fn.join(text, "\n"), params.range.start.line },
+        }, nil, 0)
+
+        local content = {}
+        if resp["result"] then
+          for k, v in pairs(resp.result) do
+            vim.list_extend(content, { "# " .. k, "" })
+            vim.list_extend(content, vim.split(v, "\n", { trimempty = true }))
+          end
+        else
+          table.insert(content, "Error")
         end
+
+        vim.schedule(function()
+          vim.lsp.util.open_floating_preview(content, "elixir", {})
+        end)
       end
 
-      function M.to_pipe(client)
-        return function()
-          manipulate_pipes("toPipe", client)
-        end
-      end
+      vim.api.nvim_create_autocmd("LspAttach", {
+        group = vim.api.nvim_create_augroup("lsp_attach", { clear = true }),
+        callback = function(ev)
+          local client = assert(vim.lsp.get_client_by_id(ev.data.client_id))
+          local bufnr = ev.buf
 
-      function M.expand_macro(client)
-        return function()
-          local params = vim.lsp.util.make_given_range_params(nil, nil, 0, client.offset_encoding)
+          -- vim-illuminate highlights via treesitter, and no server here has
+          -- lenses worth showing (Expert: "Reindex" in mix.exs, ElixirLS: tests)
+          client.server_capabilities.documentHighlightProvider = false
+          client.server_capabilities.codeLensProvider = nil
 
-          local text = vim.api.nvim_buf_get_text(
-            0,
-            params.range.start.line,
-            params.range.start.character,
-            params.range["end"].line,
-            params.range["end"].character,
-            {}
-          )
-
-          local resp = client:request_sync("workspace/executeCommand", {
-            command = "expandMacro:serverid",
-            arguments = { params.textDocument.uri, vim.fn.join(text, "\n"), params.range.start.line },
-          }, nil, 0)
-
-          local content = {}
-          if resp["result"] then
-            for k, v in pairs(resp.result) do
-              vim.list_extend(content, { "# " .. k, "" })
-              vim.list_extend(content, vim.split(v, "\n", { trimempty = true }))
+          local map = function(mode, lhs, rhs, desc)
+            vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true, desc = desc })
+          end
+          -- only map what this server actually implements, so which-key never
+          -- shows a key that would answer "method not supported"
+          local lsp_map = function(method, mode, lhs, rhs, desc)
+            if client:supports_method(method) then
+              map(mode, lhs, rhs, desc)
             end
-          else
-            table.insert(content, "Error")
           end
 
-          vim.schedule(function()
-            vim.lsp.util.open_floating_preview(content, "elixir", {})
-          end)
-        end
-      end
+          -- Hover, definition-by-tag, document symbols and diagnostic jumps stay
+          -- on Neovim defaults (K, <C-]>, gO, ]d/[d). Everything else is under
+          -- gl, the which-key "lsp" group; Neovim's gr* defaults are removed
+          -- below so `gr` (replace virtual char) works without a timeout.
+          lsp_map("textDocument/definition", "n", "gd", vim.lsp.buf.definition, "Goto definition")
+          lsp_map("textDocument/declaration", "n", "gD", vim.lsp.buf.declaration, "Goto declaration")
 
-      local on_attach = function(client, bufnr)
-        client.server_capabilities.documentHighlightProvider = false
-        client.server_capabilities.codeLensProvider = nil
+          lsp_map("textDocument/codeAction", { "n", "x" }, "gla", vim.lsp.buf.code_action, "Code action")
+          lsp_map("textDocument/rename", "n", "gln", vim.lsp.buf.rename, "Rename")
+          lsp_map("textDocument/references", "n", "glr", vim.lsp.buf.references, "References")
+          lsp_map("textDocument/implementation", "n", "gli", vim.lsp.buf.implementation, "Implementation")
+          lsp_map("textDocument/typeDefinition", "n", "glt", vim.lsp.buf.type_definition, "Type definition")
+          -- definition(s) into quickfix instead of jumping, so nvim-bqf previews
+          -- the code in a float while the cursor stays here
+          lsp_map("textDocument/definition", "n", "gld", function()
+            vim.lsp.buf.definition({
+              on_list = function(list)
+                vim.fn.setqflist({}, " ", list)
+                vim.cmd.copen()
+              end,
+            })
+          end, "Peek definition")
+          lsp_map("textDocument/signatureHelp", "n", "gls", vim.lsp.buf.signature_help, "Signature help")
+          map("n", "gle", vim.diagnostic.open_float, "Line diagnostics")
 
-        local bufmap = function(mode, lhs, rhs, desc)
-          vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true, desc = desc })
-        end
+          if client.name == "elixirls" then
+            local add_user_cmd = vim.api.nvim_buf_create_user_command
+            add_user_cmd(bufnr, "ElixirFromPipe", function()
+              manipulate_pipes("fromPipe", client)
+            end, {})
+            add_user_cmd(bufnr, "ElixirToPipe", function()
+              manipulate_pipes("toPipe", client)
+            end, {})
+            add_user_cmd(bufnr, "ElixirExpandMacro", function()
+              expand_macro(client)
+            end, { range = true })
+          end
 
-        -- Hover, definition-by-tag, document symbols and diagnostic jumps stay
-        -- on Neovim defaults (K, <C-]>, gO, ]d/[d). Everything else is under
-        -- gl, the which-key "lsp" group; Neovim's gr* defaults are removed
-        -- below so `gr` (replace virtual char) works without a timeout.
-        bufmap("n", "gd", vim.lsp.buf.definition, "Goto definition")
-        bufmap("n", "gD", vim.lsp.buf.declaration, "Goto declaration")
-
-        bufmap({ "n", "x" }, "gla", vim.lsp.buf.code_action, "Code action")
-        bufmap("n", "gln", vim.lsp.buf.rename, "Rename")
-        bufmap("n", "glr", vim.lsp.buf.references, "References")
-        bufmap("n", "gli", vim.lsp.buf.implementation, "Implementation")
-        bufmap("n", "glt", vim.lsp.buf.type_definition, "Type definition")
-        -- definition(s) into quickfix instead of jumping, so nvim-bqf previews
-        -- the code in a float while the cursor stays here
-        bufmap("n", "gld", function()
-          vim.lsp.buf.definition({
-            on_list = function(list)
-              vim.fn.setqflist({}, " ", list)
-              vim.cmd.copen()
-            end,
-          })
-        end, "Peek definition")
-        bufmap("n", "gle", vim.diagnostic.open_float, "Line diagnostics")
-        bufmap("n", "gls", vim.lsp.buf.signature_help, "Signature help")
-        bufmap("n", "glp", ":ElixirToPipe<CR>", "To pipe")
-        bufmap("n", "glP", ":ElixirFromPipe<CR>", "From pipe")
-
-        bufmap("n", "glwa", vim.lsp.buf.add_workspace_folder, "Add workspace folder")
-        bufmap("n", "glwr", vim.lsp.buf.remove_workspace_folder, "Remove workspace folder")
-        bufmap("n", "glwl", function()
-          print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-        end, "List workspace folders")
-      end
+          if client.name == "sqls" then
+            -- <Plug>(sqls-execute-query) is an operator: glqip runs the paragraph
+            map({ "n", "x" }, "glq", "<Plug>(sqls-execute-query)", "Execute query")
+            map({ "n", "x" }, "glQ", "<Plug>(sqls-execute-query-vertical)", "Execute query, vertical")
+          end
+        end,
+      })
 
       for _, lhs in ipairs({ "grn", "grr", "gri", "grt", "grx" }) do
         pcall(vim.keymap.del, "n", lhs)
       end
       pcall(vim.keymap.del, { "n", "x" }, "gra")
 
-      local capabilities = vim.tbl_deep_extend(
-        "force",
-        require("blink.cmp").get_lsp_capabilities(),
-        require("lsp-file-operations").default_capabilities()
-      )
-
       vim.lsp.config("elixirls", {
-        on_attach = function(client, bufnr)
-          on_attach(client, bufnr)
-
-          local add_user_cmd = vim.api.nvim_buf_create_user_command
-          add_user_cmd(bufnr, "ElixirFromPipe", M.from_pipe(client), {})
-          add_user_cmd(bufnr, "ElixirToPipe", M.to_pipe(client), {})
-          add_user_cmd(bufnr, "ElixirExpandMacro", M.expand_macro(client), { range = true })
-        end,
         cmd = { vim.fn.expand("~/projects/elixir-ls/server/language_server.sh") },
         -- mix.lock exists only at the umbrella root, so nested apps resolve to it;
         -- a function is needed because lspconfig's default root_dir would otherwise
@@ -174,15 +182,23 @@ return {
             mixEnv = "dev",
           },
         },
-        flags = {
-          debounce_text_changes = 150,
-        },
-        capabilities = capabilities,
       })
 
+      -- inlay hints need explicit preferences for typescript-language-server
+      local ts_inlay_hints = {
+        includeInlayParameterNameHints = "literals",
+        includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+        includeInlayFunctionParameterTypeHints = true,
+        includeInlayVariableTypeHints = false,
+        includeInlayPropertyDeclarationTypeHints = true,
+        includeInlayFunctionLikeReturnTypeHints = true,
+        includeInlayEnumMemberValueHints = true,
+      }
       vim.lsp.config("ts_ls", {
-        on_attach = on_attach,
-        capabilities = capabilities,
+        settings = {
+          typescript = { inlayHints = ts_inlay_hints },
+          javascript = { inlayHints = ts_inlay_hints },
+        },
       })
 
       -- Elixir install root (has lib/elixir/lib/kernel.ex) derived from the elixir
@@ -203,8 +219,6 @@ return {
       -- root_dir come from lspconfig's lsp/expert.lua. Settings are a flat map,
       -- that is how Expert reads workspace/didChangeConfiguration.
       vim.lsp.config("expert", {
-        on_attach = on_attach,
-        capabilities = capabilities,
         settings = {
           -- do not run mix deps.get behind my back when the engine fails to start
           autoFetchDependencies = false,
@@ -244,124 +258,16 @@ return {
           },
         })
         vim.lsp.enable("sqls")
-
-        -- <Plug>(sqls-execute-query) is an operator: glqip runs the paragraph
-        vim.api.nvim_create_autocmd("LspAttach", {
-          group = vim.api.nvim_create_augroup("sqls_keys", { clear = true }),
-          callback = function(ev)
-            local client = vim.lsp.get_client_by_id(ev.data.client_id)
-            if client and client.name == "sqls" then
-              local function map(lhs, rhs, desc)
-                vim.keymap.set({ "n", "x" }, lhs, rhs, { buffer = ev.buf, desc = desc })
-              end
-              map("glq", "<Plug>(sqls-execute-query)", "Execute query")
-              map("glQ", "<Plug>(sqls-execute-query-vertical)", "Execute query, vertical")
-            end
-          end,
-        })
       end
 
       vim.lsp.inlay_hint.enable()
+      Snacks.toggle.inlay_hints():map("<leader>uh")
       -- elixirls stays configured as a fallback; enable exactly one Elixir server
       vim.lsp.enable("expert")
       vim.lsp.enable("ts_ls")
     end,
   },
 
-  -- show signature from LSP when apply a function
-  {
-    "ray-x/lsp_signature.nvim",
-    event = "LspAttach",
-    config = function()
-      require("lsp_signature").setup({
-        hint_prefix = " ",
-        transparency = 10,
-      })
-    end,
-  },
-
   -- notifications and LSP progress messages
   { "j-hui/fidget.nvim", event = "LspAttach", config = true },
-
-  -- completion engine
-  {
-    "saghen/blink.cmp",
-    event = { "InsertEnter", "CmdlineEnter" },
-    dependencies = { "rafamadriz/friendly-snippets" },
-    version = "1.*",
-    opts = {
-      keymap = {
-        preset = "none",
-        ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
-        ["<C-e>"] = { "hide" },
-        ["<CR>"] = { "accept", "fallback" },
-        ["<Tab>"] = { "select_next", "snippet_forward", "fallback" },
-        ["<S-Tab>"] = { "select_prev", "snippet_backward", "fallback" },
-        ["<Up>"] = { "select_prev", "fallback" },
-        ["<Down>"] = { "select_next", "fallback" },
-        ["<C-j>"] = { "select_next", "fallback" },
-        ["<C-k>"] = { "select_prev", "fallback" },
-        ["<C-u>"] = { "scroll_documentation_up", "fallback" },
-        ["<C-f>"] = { "scroll_documentation_down", "fallback" },
-        ["<C-d>"] = { "snippet_forward", "fallback" },
-        ["<C-b>"] = { "snippet_backward", "fallback" },
-      },
-      appearance = { nerd_font_variant = "mono", kind_icons = require("config.icons").kinds },
-      completion = {
-
-        accept = {
-          -- experimental auto-brackets support
-          auto_brackets = {
-            enabled = true,
-          },
-        },
-        ghost_text = {
-          enabled = vim.g.ai_cmp,
-        },
-        documentation = { auto_show = true, window = { border = "rounded" } },
-        menu = {
-          -- draw = {
-          --   treesitter = { "lsp" },
-          -- },
-          draw = {
-            components = {
-              kind_icon = {
-                text = function(ctx)
-                  local icon = ctx.kind_icon
-                  if vim.tbl_contains({ "Path" }, ctx.source_name) then
-                      local dev_icon, _ = require("nvim-web-devicons").get_icon(ctx.label)
-                      if dev_icon then
-                          icon = dev_icon
-                      end
-                  end
-
-                  return icon .. ctx.icon_gap
-                end,
-
-                -- Optionally, use the highlight groups from nvim-web-devicons
-                -- You can also add the same function for `kind.highlight` if you want to
-                -- keep the highlight groups in sync with the icons.
-                highlight = function(ctx)
-                  local hl = ctx.kind_hl
-                  if vim.tbl_contains({ "Path" }, ctx.source_name) then
-                    local dev_icon, dev_hl = require("nvim-web-devicons").get_icon(ctx.label)
-                    if dev_icon then
-                      hl = dev_hl
-                    end
-                  end
-                  return hl
-                end,
-              }
-            }
-          }
-        }
-      },
-      sources = { default = { "lsp", "path", "snippets", "buffer" } },
-      fuzzy = { implementation = "prefer_rust_with_warning" },
-    },
-    opts_extend = { "sources.default" },
-  },
-
-  -- better design for quick-fix window, it is used in easygrep, vim-fugitive, etc
-  { "kevinhwang91/nvim-bqf", ft = "qf" },
 }

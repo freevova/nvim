@@ -40,6 +40,13 @@ return {
         end,
         desc = "Document symbols",
       },
+      {
+        "<leader>sS",
+        function()
+          require("telescope.builtin").lsp_dynamic_workspace_symbols()
+        end,
+        desc = "Workspace symbols",
+      },
     },
     config = function()
       local telescope = require("telescope")

@@ -134,7 +134,6 @@ return {
           { "]", group = "next" },
           { "g", group = "goto" },
           { "gl", group = "lsp" },
-          { "glw", group = "workspace" },
           { "z", group = "fold" },
           {
             "<leader>b",

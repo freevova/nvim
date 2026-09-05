@@ -54,5 +54,6 @@ opt.foldtext = "" -- folded line keeps treesitter highlighting
 opt.wildmode = "longest:full,full" -- Command-line completion mode
 opt.winminwidth = 5 -- Minimum window width
 opt.winborder = "rounded" -- border for floating windows that do not set their own (hover, signature help, diagnostics)
+opt.updatetime = 300 -- CursorHold after 300 ms: diagnostic float, illuminate
 
 opt.wildignorecase = true -- wildmenu ignores case

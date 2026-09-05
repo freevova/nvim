@@ -69,6 +69,9 @@ return {
     },
   },
 
+  -- better quickfix window: previews the item under the cursor in a float
+  { "kevinhwang91/nvim-bqf", ft = "qf" },
+
   -- runs external linters and shows their output as diagnostics
   {
     "mfussenegger/nvim-lint",
