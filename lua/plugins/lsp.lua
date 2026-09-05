@@ -185,6 +185,33 @@ return {
         capabilities = capabilities,
       })
 
+      -- Elixir install root (has lib/elixir/lib/kernel.ex) derived from the elixir
+      -- on PATH: mise builds are compiled on CI, so module sources point to
+      -- /home/runner/...; Expert remaps them onto this root for stdlib gd
+      local function elixir_source_path()
+        local exe = vim.fn.exepath("elixir")
+        if exe == "" then
+          return nil
+        end
+        local root = vim.fs.dirname(vim.fs.dirname(vim.fn.resolve(exe)))
+        if vim.uv.fs_stat(root .. "/lib/elixir/lib/kernel.ex") then
+          return root
+        end
+      end
+
+      -- Expert, the official Elixir LSP. cmd, filetypes and the umbrella-aware
+      -- root_dir come from lspconfig's lsp/expert.lua. Settings are a flat map,
+      -- that is how Expert reads workspace/didChangeConfiguration.
+      vim.lsp.config("expert", {
+        on_attach = on_attach,
+        capabilities = capabilities,
+        settings = {
+          -- do not run mix deps.get behind my back when the engine fails to start
+          autoFetchDependencies = false,
+          elixirSourcePath = elixir_source_path(),
+        },
+      })
+
       local function all_env_vars_set(env_variables)
         for _, varName in ipairs(env_variables) do
           if not os.getenv(varName) then
@@ -235,8 +262,9 @@ return {
       end
 
       vim.lsp.inlay_hint.enable()
-      vim.lsp.enable('elixirls')
-      vim.lsp.enable('ts_ls')
+      -- elixirls stays configured as a fallback; enable exactly one Elixir server
+      vim.lsp.enable("expert")
+      vim.lsp.enable("ts_ls")
     end,
   },
 
