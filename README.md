@@ -24,7 +24,7 @@ Personal Neovim configuration focused on Elixir development, with support for Ty
 │       ├── colorscheme.lua         # Nightfox theme with Gruvbox-inspired colors
 │       ├── telescope.lua           # Fuzzy finder
 │       ├── treesitter.lua          # Syntax highlighting, text objects, context, rainbow
-│       ├── editor.lua              # surround, autopairs, flash, which-key, yanky, outline
+│       ├── editor.lua              # surround, autopairs, flash, which-key, yanky
 │       ├── ui.lua                  # bufferline, lualine, indent-blankline, markdown
 │       ├── neo-tree.lua            # File explorer
 │       ├── git.lua                 # fugitive, gitsigns, git-conflict
@@ -177,7 +177,6 @@ per window through `winhighlight` (`config/autocmds.lua` for `fugitive://` and `
 | `]c` / `[c`, `]C` / `[C` | Next / prev class start, end (hunk motions in a diff window) |
 | `]a` / `[a`, `]A` / `[A` | Next / prev parameter start, end |
 | `af` / `if`, `ac` / `ic` | Select outer / inner function, class |
-| `go` | Toggle outline |
 | `gx` | Open with system app |
 
 ### Change

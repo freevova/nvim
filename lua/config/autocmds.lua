@@ -15,8 +15,8 @@ vim.api.nvim_create_autocmd({ "VimResized" }, {
 -- close some filetypes with <q>
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup("close_with_q"),
-  -- only helper windows without their own q; Trouble, Outline, neo-tree,
-  -- Lazy and man already close on q
+  -- only helper windows without their own q; Trouble, neo-tree, Lazy and
+  -- man already close on q
   pattern = {
     "checkhealth",
     "fugitive",

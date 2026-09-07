@@ -73,7 +73,7 @@ return {
     end,
     opts = {
       sources = { "filesystem", "buffers", "git_status", "document_symbols" },
-      open_files_do_not_replace_types = { "terminal", "Trouble", "trouble", "qf", "Outline" },
+      open_files_do_not_replace_types = { "terminal", "Trouble", "trouble", "qf" },
       -- Глобальні команди — доступні в усіх джерелах (filesystem/buffers/git_status)
       commands = {
         -- moves to the parent directory without collapsing it (h collapses)
