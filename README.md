@@ -119,6 +119,7 @@ Everything else lives under `gl`, the which-key "lsp" group, and is mapped only 
 | `gla` | Code action |
 | `gln` | Rename |
 | `glr` / `gli` / `glt` | References / implementation / type definition |
+| `glR` | References, definitions and more, in a Trouble window |
 | `gls` | Signature help |
 | `gle` | Line diagnostics float |
 | `glq` / `glQ` | Execute SQL query / vertical (sqls buffers, operator-pending) |
@@ -132,7 +133,7 @@ Diagnostics of the cursor line open in a float on `CursorHold`; there is no virt
 | `<leader>xx` / `<leader>xX` | Diagnostics / buffer diagnostics (Trouble) |
 | `<leader>xL` / `<leader>xQ` | Location list / quickfix (Trouble) |
 | `<leader>xt` / `<leader>xT` | Todos / only TODO, FIX, FIXME (Trouble) |
-| `gs` / `gS` | Symbols / LSP references, definitions (Trouble) |
+| `gs` | Symbols (Trouble) |
 | `]q` / `[q` | Next / prev Trouble or quickfix item |
 | `]t` / `[t` | Next / prev todo comment |
 
