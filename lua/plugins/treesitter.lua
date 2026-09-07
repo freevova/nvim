@@ -97,10 +97,19 @@ return {
         { "goto_previous_end", "[C", "@class.outer", "Prev class end" },
         { "goto_previous_end", "[A", "@parameter.inner", "Prev parameter end" },
       }
+      -- inside a diff ]c/[c belong to vim's hunk motions, which matter far more
+      -- than class motions there, and gitsigns' ]h/[h is absent in the
+      -- fugitive:// window. Operators and visual mode keep the class motion
+      local diff_motions = { ["]c"] = true, ["[c"] = true }
+
       for _, m in ipairs(move_maps) do
         local fn_name, key, query, desc = unpack(m)
         vim.keymap.set({ "n", "x", "o" }, key, function()
-          move[fn_name](query)
+          if diff_motions[key] and vim.wo.diff and vim.fn.mode() == "n" then
+            vim.cmd.normal({ vim.v.count1 .. key, bang = true })
+          else
+            move[fn_name](query)
+          end
         end, { desc = desc })
       end
 

@@ -88,6 +88,18 @@ return {
           -- full-width band behind Elixir @doc/@moduledoc blocks (config/elixir_doc_blocks.lua)
           ElixirDocBlock = { bg = palettes.nightfox.bg0 },
 
+          -- diff mode. Vim paints one set of Diff* groups in both windows, so
+          -- these are the new side (green) and the *AsDelete variants are
+          -- swapped in per window on the old side: see config/autocmds.lua
+          DiffAdd = { bg = "#32361A" },
+          DiffChange = { bg = "#32361A" },
+          DiffText = { bg = "#4C5A1C", style = "bold" },
+          DiffAddAsDelete = { bg = "#3C1F1C" },
+          DiffChangeAsDelete = { bg = "#3C1F1C" },
+          DiffTextAsDelete = { bg = "#642B22", style = "bold" },
+          -- filler lines carry no content, keep them out of the way
+          DiffDelete = { fg = palettes.nightfox.bg4, bg = palettes.nightfox.bg1 },
+
           -- make IlluminatedWord* the same as CursorLine, so it doesn't blink during writing
           IlluminatedWordText = { link = "CursorLine" },
           IlluminatedWordRead = { link = "CursorLine" },

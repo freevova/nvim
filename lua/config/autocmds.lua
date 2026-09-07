@@ -54,3 +54,13 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.opt_local.spell = true
   end,
 })
+
+-- the Diff* groups are painted for the new side of a diff, so repaint the
+-- HEAD/index side red. fugitive:// and gitsigns:// buffers are always that side
+vim.api.nvim_create_autocmd("BufWinEnter", {
+  group = augroup("diff_old_side"),
+  pattern = { "fugitive://*", "gitsigns://*" },
+  callback = function()
+    vim.wo.winhighlight = "DiffAdd:DiffAddAsDelete,DiffChange:DiffChangeAsDelete,DiffText:DiffTextAsDelete"
+  end,
+})
